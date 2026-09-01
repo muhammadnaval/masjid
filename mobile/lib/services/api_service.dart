@@ -8,13 +8,13 @@ class ApiService {
   static const _randomHadisUrl = 'https://api.myquran.com/v3/hadis/enc/random';
 
   static const baseUrl = String.fromEnvironment(
-    'INSFORGE_URL',
-    defaultValue: 'https://2a5hq4xh.ap-southeast.insforge.app',
+    'LARAVEL_URL',
+    defaultValue: 'http://10.0.2.2:8000',
   );
   static const displayStateUrl = String.fromEnvironment(
     'DISPLAY_STATE_URL',
     defaultValue:
-        'https://2a5hq4xh.ap-southeast.insforge.app/functions/masjid-backend',
+        'http://10.0.2.2:8000/api/display/state',
   );
 
   static Future<Map<String, dynamic>?> loadCachedDisplayState() async {
