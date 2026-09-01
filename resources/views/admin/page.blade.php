@@ -296,13 +296,72 @@
 </div>
 
 @elseif($page === 'schedule')
-<div class="max-w-4xl space-y-6">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
-        <h3 class="text-sm font-bold text-emerald-400">Lokasi Aktif</h3>
-        <div class="flex items-center gap-4 text-sm">
-            <span class="text-slate-400">Provinsi: <strong class="text-white">{{ $activeLocation->province_name ?? '-' }}</strong></span>
-            <span class="text-slate-400">Kota: <strong class="text-white">{{ $activeLocation->city_name ?? '-' }}</strong></span>
+<div class="max-w-4xl space-y-6" x-data="{
+    province: '{{ $activeLocation->province_name ?? 'Sumatera Barat' }}',
+    cities: [],
+    selectedCity: '{{ $activeLocation->city_name ?? '' }}',
+    selectedCityCode: '{{ $activeLocation->city_code ?? '' }}',
+    loadingCities: false,
+    init() { this.fetchCities(); },
+    async fetchCities() {
+        this.loadingCities = true;
+        this.cities = [];
+        try {
+            const res = await fetch('{{ route('admin.schedule.cities') }}?province=' + encodeURIComponent(this.province));
+            const json = await res.json();
+            this.cities = json.data || [];
+        } catch(e) { this.cities = []; }
+        this.loadingCities = false;
+    },
+    selectCity(city) {
+        this.selectedCity = city.city_name;
+        this.selectedCityCode = city.city_code;
+    }
+}">
+    {{-- Location Edit Form --}}
+    <form method="POST" action="{{ route('admin.schedule.location') }}" class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+        @csrf
+        <h3 class="text-sm font-bold text-emerald-400">Lokasi Sholat</h3>
+
+        <div>
+            <label class="block text-xs text-slate-300 mb-1">Provinsi</label>
+            <select x-model="province" @change="fetchCities(); selectedCity = ''; selectedCityCode = ''"
+                name="province_name"
+                class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white">
+                @foreach($provinces as $prov)
+                    <option value="{{ $prov }}" {{ ($activeLocation->province_name ?? '') === $prov ? 'selected' : '' }}>{{ $prov }}</option>
+                @endforeach
+            </select>
         </div>
+
+        <div>
+            <label class="block text-xs text-slate-300 mb-1">Kota / Kabupaten</label>
+            <template x-if="cities.length > 0">
+                <select x-model="selectedCity" @change="let c = cities.find(x => x.city_name === selectedCity); selectedCityCode = c ? c.city_code : '';"
+                    name="city_name"
+                    class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white">
+                    <option value="">— Pilih Kota —</option>
+                    <template x-for="city in cities" :key="city.city_name">
+                        <option :value="city.city_name" :selected="city.city_name === selectedCity" x-text="city.city_name"></option>
+                    </template>
+                </select>
+            </template>
+            <template x-if="cities.length === 0 && !loadingCities">
+                <input type="text" name="city_name" :value="selectedCity" placeholder="Ketik nama kota..."
+                    class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white">
+            </template>
+            <template x-if="loadingCities">
+                <div class="text-xs text-slate-500 py-2">Memuat daftar kota...</div>
+            </template>
+            <input type="hidden" name="city_code" :value="selectedCityCode">
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition">Simpan Lokasi</button>
+    </form>
+
+    {{-- Today's Schedule --}}
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+        <h3 class="text-sm font-bold text-emerald-400">Jadwal Hari Ini — {{ $activeLocation->city_name ?? '-' }}</h3>
         @if($schedule)
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             @foreach(['subuh','dzuhur','ashar','maghrib','isya'] as $prayer)

@@ -9,8 +9,62 @@ use Illuminate\Support\Facades\Log;
 class PrayerScheduleService
 {
     /**
-     * Sync prayer schedule for a given province and city from EQuran.id API.
+     * Get list of provinces from EQuran.id API, with a local fallback.
      */
+    public function getProvinces(): array
+    {
+        try {
+            $response = Http::timeout(5)->get('https://equran.id/api/v2/shalat/provinsi');
+            if ($response->successful() && isset($response->json()['data'])) {
+                return $response->json()['data'];
+            }
+        } catch (\Exception $e) {
+            Log::warning('Gagal mengambil daftar provinsi dari EQuran.id API: '.$e->getMessage());
+        }
+
+        return [
+            'Sumatera Barat', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah',
+            'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
+            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat',
+            'Kalimantan Selatan', 'Kalimantan Timur', 'Sulawesi Selatan',
+            'Sulawesi Utara', 'Papua',
+        ];
+    }
+
+    /**
+     * Get list of cities for a province from EQuran.id API, with a local fallback.
+     */
+    public function getCitiesByProvince(string $province): array
+    {
+        try {
+            $response = Http::timeout(5)->post('https://equran.id/api/v2/shalat/kabkota', [
+                'provinsi' => $province,
+            ]);
+            if ($response->successful() && isset($response->json()['data'])) {
+                return array_map(function ($cityName) use ($province) {
+                    return [
+                        'province_name' => $province,
+                        'city_name' => $cityName,
+                        'city_code' => strtolower(str_replace([' ', '.'], ['-', ''], $cityName)),
+                    ];
+                }, $response->json()['data']);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Gagal mengambil daftar kota dari EQuran.id API: '.$e->getMessage());
+        }
+
+        return PrayerLocation::where('province_name', $province)
+            ->orderBy('city_name')
+            ->get()
+            ->map(fn ($location) => [
+                'province_name' => $location->province_name,
+                'city_name' => $location->city_name,
+                'city_code' => $location->city_code,
+            ])
+            ->all();
+    }
+
+
     public function syncSchedules(string $province = 'Sumatera Barat', string $city = 'Kota Padang'): bool
     {
         try {

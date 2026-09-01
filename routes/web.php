@@ -23,7 +23,9 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::put('/{page}/{id}/toggle', [AdminPanelController::class, 'toggle'])->where('page', 'running-text|agenda|media')->name('admin.page.toggle');
     Route::delete('/{page}/{id}', [AdminPanelController::class, 'delete'])->where('page', 'running-text|agenda|media')->name('admin.page.delete');
 
-    // Prayer schedule synchronization
+    // Prayer schedule management
+    Route::post('/jadwal-sholat/lokasi', [\App\Http\Controllers\PrayerScheduleController::class, 'updateLocationWeb'])->name('admin.schedule.location');
+    Route::get('/jadwal-sholat/kota', [\App\Http\Controllers\PrayerScheduleController::class, 'getCities'])->name('admin.schedule.cities');
     Route::post('/jadwal-sholat/sinkron', [\App\Http\Controllers\PrayerScheduleController::class, 'syncWeb'])->name('admin.schedule.sync');
 
     // Singleton pages (GET view, POST save)

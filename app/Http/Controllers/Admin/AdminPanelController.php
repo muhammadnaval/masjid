@@ -29,7 +29,7 @@ class AdminPanelController extends Controller
     {
         $data = match ($page) {
             'profile' => ['profile' => MosqueProfile::firstOrCreate(['id' => 1], ['name' => 'MASJID AL-HIDAYAH SITEBA', 'address' => 'Jl. Raya Siteba No. 15', 'timezone' => 'Asia/Jakarta'])],
-            'schedule' => ['locations' => PrayerLocation::all(), 'activeLocation' => PrayerLocation::where('is_active', true)->first(), 'schedule' => PrayerSchedule::where('date', date('Y-m-d'))->first(), 'corrections' => PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name'), 'lastSync' => SyncLog::where('type', 'schedule_sync')->latest()->first()],
+            'schedule' => ['locations' => PrayerLocation::all(), 'activeLocation' => PrayerLocation::where('is_active', true)->first(), 'schedule' => PrayerSchedule::where('date', date('Y-m-d'))->first(), 'corrections' => PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name'), 'lastSync' => SyncLog::where('type', 'schedule_sync')->latest()->first(), 'provinces' => app(\App\Services\PrayerScheduleService::class)->getProvinces()],
             'iqamah' => ['settings' => IqamahSetting::all()->keyBy('prayer_name')],
             'syuruq' => ['setting' => SyuruqSetting::first()],
             'audio' => ['rows' => AudioSetting::all()->keyBy('type')],
