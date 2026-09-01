@@ -1,0 +1,2805 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Pengelolaan Masjid — Masjid Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0F172A;
+      --bg-card: #1E293B;
+      --accent-emerald: #10B981;
+      --accent-gold: #F59E0B;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Keep media text fields in the payload without exposing them in admin UI. */
+    #media-subtitle-group,
+    #media-arabic-group {
+      display: none !important;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Login Modal Overlay */
+    #login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+
+    .login-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 260px;
+      background-color: #0B0F17;
+      border-right: 1px solid var(--border-color);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #059669, #10B981);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .nav-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item button {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .nav-item button:hover, .nav-item button.active {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      font-weight: 600;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .stat-card .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card .value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      margin-top: 6px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--accent-emerald);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      background-color: #0F172A;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #FFF;
+      font-size: 14px;
+    }
+
+    .upload-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .upload-row input[type="text"] {
+      flex: 1;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #059669, #10B981);
+      color: #FFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: #FFF;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .error-msg {
+      color: #EF4444;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* Live Header Preview Box */
+    .header-preview-box {
+      background: #0B0F17;
+      border: 2px dashed var(--accent-emerald);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .header-preview-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-preview-circle {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #059669, #10B981);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #FFF;
+      overflow: hidden;
+    }
+
+    .logo-preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .badge-insforge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--accent-emerald);
+      color: var(--accent-emerald);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+    }
+
+    /* Table Styles for eQuran Preview (29.3.2) */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .schedule-table th, .schedule-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .schedule-table th {
+      background-color: #0F172A;
+      color: var(--accent-emerald);
+      font-weight: 600;
+    }
+
+    .schedule-table tr:hover {
+      background-color: rgba(30, 41, 59, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sub-Fitur 29.1.1: InsForge Auth Login Modal -->
+  <div id="login-overlay">
+    <div class="login-box">
+      <div class="brand-icon" style="margin:0 auto 16px auto;">🔐</div>
+      <div class="login-title">InsForge Auth Admin Login</div>
+      <div class="login-subtitle">Masukan kredensial pengurus masjid (InsForge Auth)</div>
+      
+      <div class="form-group" style="text-align:left;">
+        <label>Email Admin (InsForge Auth)</label>
+        <input type="email" id="login-email">
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <label>Password InsForge Auth</label>
+        <input type="password" id="login-password" autocomplete="current-password">
+      </div>
+      
+      <div id="login-error" class="error-msg">Email atau password InsForge Auth tidak valid</div>
+      
+      <button class="btn" style="width:100%; margin-top:16px;" onclick="doLogin()">Login via InsForge Auth</button>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigasi -->
+  <aside>
+    <div class="brand">
+      <div class="brand-icon">🕌</div>
+      <div class="brand-title">InsForge Admin</div>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item"><button class="active" onclick="showTab('dashboard', this)">Ringkasan Dashboard</button></li>
+      <li class="nav-item"><button onclick="showTab('profile', this)">Profil & Logo Masjid</button></li>
+      <li class="nav-item"><button onclick="showTab('jadwal', this)">Jadwal Sholat MyQuran API</button></li>
+      <li class="nav-item"><button onclick="showTab('iqamah', this)">⏱️ Pengaturan Jeda Iqamah</button></li>
+      <li class="nav-item"><button onclick="showTab('koreksi', this)">Koreksi Waktu Sholat</button></li>
+      <li class="nav-item"><button onclick="showTab('audio', this)">Pengaturan Audio, Syuruq & Dzikir</button></li>
+      <li class="nav-item"><button onclick="showTab('running-text', this)">Running Text</button></li>
+      <li class="nav-item"><button onclick="showTab('donation', this)">Pengaturan QR Donasi</button></li>
+      <li class="nav-item"><button onclick="showTab('friday', this)">Pengaturan Mode Jum'at</button></li>
+      <li class="nav-item"><button onclick="showTab('agendas', this)">Agenda & Hari Besar Islam</button></li>
+      <li class="nav-item"><button onclick="showTab('theme', this)">Kustomisasi Tema & Desain</button></li>
+      <li class="nav-item"><button onclick="showTab('media', this)">Konten Multimedia & Poster</button></li>
+      <li class="nav-item"><button onclick="showTab('account', this)">Pengaturan Akun</button></li>
+    </ul>
+    <div style="margin-top:auto;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="doLogout()">Logout</button>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Dashboard Pengelolaan Masjid</h1>
+      <a href="https://2a5hq4xh.insforge.site" target="_blank" class="btn" style="text-decoration:none;">📺 Buka Live TV Display</a>
+    </header>
+
+    <!-- Sub-Fitur 29.1.2: Ringkasan Dashboard -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Status Display TV</div>
+          <div class="value" id="stat-status">ONLINE</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Lokasi Jadwal Active</div>
+          <div class="value" id="stat-location">KOTA PADANG</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Sinkronisasi eQuran</div>
+          <div class="value" style="color:var(--accent-gold);" id="stat-sync">TERBARU</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Storage Bucket</div>
+          <div class="value" style="font-size:18px; color:var(--accent-emerald);" id="stat-bucket">masjid-assets</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Running Text Aktif</div>
+          <div class="value" id="stat-rt">1 ITEM</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>InsForge Cloud Storage Integration <span class="badge-insforge">masjid-assets</span></h3>
+        <p style="color:var(--text-muted); font-size:14px; line-height:1.6;">
+          Public storage bucket <code>masjid-assets</code> aktif di InsForge Cloud Storage. Seluruh aset gambar logo masjid, background custom, audio Adzan/Murottal, dan QR donasi disimpan secara langsung ke cloud bucket: <br>
+          <code>https://2a5hq4xh.insforge.app/storage/v1/object/public/masjid-assets/</code>
+        </p>
+      </div>
+    </div>
+
+    <!-- Sub-Fitur 29.2: Profil & Visual Masjid -->
+    <div id="tab-profile" class="tab-content">
+      <div class="card">
+        <h3>Preview Visual Header TV Display</h3>
+        <div class="header-preview-box">
+          <div class="header-preview-left">
+            <div class="logo-preview-circle" id="prev-logo-box">🕌</div>
+            <div>
+              <div id="prev-name" style="font-family:'Outfit'; font-size:20px; font-weight:700; color:#FFF;">MASJID AL-HIDAYAH SITEBA PADANG</div>
+              <div id="prev-address" style="font-size:13px; color:var(--text-muted); margin-top:4px;">Jl. Siteba No. 12, Surau Gadang, Nanggalo, Kota Padang</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Outfit'; font-size:22px; font-weight:700; color:var(--accent-emerald);">23:28:00</div>
+            <div style="font-size:12px; color:var(--text-muted);">Sabtu, 1 Agustus 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Form Identitas & InsForge Storage Assets</h3>
+        
+        <div id="prof-error" class="error-msg" style="margin-bottom:16px;">Nama masjid wajib diisi</div>
+        
+        <div class="form-group">
+          <label>Nama Masjid * (Wajib)</label>
+          <input type="text" id="prof-name" value="MASJID AL-HIDAYAH SITEBA PADANG" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Alamat Lengkap</label>
+          <input type="text" id="prof-address" value="Jl. Siteba No. 12, Surau Gadang, Nanggalo, Kota Padang" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>No. Telepon / Kontak Pengurus</label>
+          <input type="text" id="prof-contact" value="(0751) 70512">
+        </div>
+        <div class="form-group">
+          <label>Zona Waktu (Timezone)</label>
+          <select id="prof-timezone">
+            <option value="Asia/Jakarta" selected>Asia/Jakarta (WIB)</option>
+            <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
+            <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
+          </select>
+        </div>
+
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border-color);">
+          <h4 style="font-family:'Outfit'; font-size:16px; margin-bottom:12px; color:var(--accent-gold);">
+            Upload Assets Ke InsForge Storage <span class="badge-insforge">Bucket: masjid-assets</span>
+          </h4>
+          
+          <div class="form-group">
+            <label>Logo Masjid (PNG/JPG/SVG/WebP)</label>
+            <div class="upload-row">
+              <input type="text" id="prof-logo" placeholder="URL InsForge Storage Logo..." oninput="updatePreview()">
+              <input type="file" id="file-logo" style="display:none;" onchange="uploadAsset('file-logo', 'prof-logo')">
+              <button class="btn btn-secondary" onclick="document.getElementById('file-logo').click()">☁️ Upload InsForge</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Background Custom Display Image</label>
+            <div class="upload-row">
+              <input type="text" id="prof-bg" placeholder="URL InsForge Storage Background...">
+              <input type="file" id="file-bg" style="display:none;" onchange="uploadAsset('file-bg', 'prof-bg')">
+              <button class="btn btn-secondary" onclick="document.getElementById('file-bg').click()">☁️ Upload InsForge</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" style="margin-top:12px;" onclick="saveProfile()">Simpan Profil & Aset Storage</button>
+      </div>
+    </div>
+
+    <!-- Sub-Fitur 29.3: Master Lokasi & Sinkronisasi MyQuran API -->
+    <div id="tab-jadwal" class="tab-content">
+      <div class="card">
+        <h3>Master Lokasi & Sinkronisasi MyQuran API (Section 29.3)</h3>
+        
+        <div class="form-group">
+          <label>Pilih Provinsi</label>
+          <select id="loc-province" onchange="loadCitiesForProvince()">
+            <option value="SUMATERA BARAT" selected>SUMATERA BARAT</option>
+            <option value="DKI JAKARTA">DKI JAKARTA</option>
+            <option value="JAWA BARAT">JAWA BARAT</option>
+            <option value="JAWA TIMUR">JAWA TIMUR</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Pilih Kota / Kabupaten (Kode MyQuran)</label>
+          <select id="loc-city">
+            <option value="0314" selected>KOTA PADANG (Kode: 0314)</option>
+            <option value="0312">KOTA BUKITTINGGI (Kode: 0312)</option>
+            <option value="0317">KOTA SOLOK (Kode: 0317)</option>
+            <option value="0305">KAB. PADANG PARIAMAN (Kode: 0305)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:16px;">
+          <button class="btn" onclick="saveActiveLocation()">Simpan Lokasi Aktif</button>
+          <button class="btn btn-secondary" style="background:var(--accent-gold); color:#000;" onclick="syncEQuranSchedule()">⚡ Sinkronkan Jadwal MyQuran API</button>
+        </div>
+
+        <div id="sync-status-msg" style="margin-top:16px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Preview Jadwal Sholat Bulanan (MyQuran API)</h3>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Imsak</th>
+              <th>Subuh</th>
+              <th>Syuruq</th>
+              <th>Dzuhur / Jum'at</th>
+              <th>Ashar</th>
+              <th>Maghrib</th>
+              <th>Isya</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-tbody">
+            <tr>
+              <td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Memuat jadwal sholat dari PostgreSQL...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sub-Fitur 29.8: Pengaturan Jeda & Countdown Iqamah -->
+    <div id="tab-iqamah" class="tab-content">
+      <div class="card">
+        <h3>⏱️ Pengaturan Jeda & Countdown Iqamah (Section 29.8)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Atur durasi hitung mundur jeda antara Adzan dan Iqamah untuk masing-masing waktu sholat. Layar TV Display akan menampilkan countdown <code>mm:ss</code> secara otomatis.
+        </p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+          <div class="card" style="background:#0F172A; border:1px solid #334155;">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">🌅 Subuh</h4>
+            <div class="form-group">
+              <label>Durasi Iqamah (menit)</label>
+              <input type="number" id="iqamah-subuh-dur" value="10" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Status Countdown</label>
+              <select id="iqamah-subuh-enabled">
+                <option value="true" selected>● AKTIF (Tampilkan Countdown)</option>
+                <option value="false">○ NONAKTIFKAN</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="background:#0F172A; border:1px solid #334155;">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">☀️ Dzuhur</h4>
+            <div class="form-group">
+              <label>Durasi Iqamah (menit)</label>
+              <input type="number" id="iqamah-dzuhur-dur" value="10" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Status Countdown</label>
+              <select id="iqamah-dzuhur-enabled">
+                <option value="true" selected>● AKTIF (Tampilkan Countdown)</option>
+                <option value="false">○ NONAKTIFKAN</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="background:#0F172A; border:1px solid #334155;">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">🌤️ Ashar</h4>
+            <div class="form-group">
+              <label>Durasi Iqamah (menit)</label>
+              <input type="number" id="iqamah-ashar-dur" value="8" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Status Countdown</label>
+              <select id="iqamah-ashar-enabled">
+                <option value="true" selected>● AKTIF (Tampilkan Countdown)</option>
+                <option value="false">○ NONAKTIFKAN</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="background:#0F172A; border:1px solid #334155;">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">🌆 Maghrib</h4>
+            <div class="form-group">
+              <label>Durasi Iqamah (menit)</label>
+              <input type="number" id="iqamah-maghrib-dur" value="7" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Status Countdown</label>
+              <select id="iqamah-maghrib-enabled">
+                <option value="true" selected>● AKTIF (Tampilkan Countdown)</option>
+                <option value="false">○ NONAKTIFKAN</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="background:#0F172A; border:1px solid #334155;">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">🌙 Isya</h4>
+            <div class="form-group">
+              <label>Durasi Iqamah (menit)</label>
+              <input type="number" id="iqamah-isya-dur" value="10" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Status Countdown</label>
+              <select id="iqamah-isya-enabled">
+                <option value="true" selected>● AKTIF (Tampilkan Countdown)</option>
+                <option value="false">○ NONAKTIFKAN</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:20px;">
+          <label>Pesan Himbauan Shaf di Layar Iqamah (Section 29.8.2)</label>
+          <input type="text" id="iqamah-screen-msg" value="Luruskan dan Rapatkan Shaf Sholat" placeholder="Contoh: Luruskan dan Rapatkan Shaf Sholat">
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveIqamahSettings()">💾 Simpan Pengaturan Iqamah</button>
+        </div>
+        <div id="iqamah-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Sub-Fitur 29.4: Koreksi Waktu Sholat -->
+    <div id="tab-koreksi" class="tab-content">
+      <div class="card">
+        <h3>Koreksi Waktu Sholat (Section 29.4)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Sesuaikan jadwal sholat dengan menambah atau mengurangi menit. Nilai koreksi diterapkan pada jadwal tersimpan sebelum ditampilkan di TV Display. Rentang: -60 s/d +60 menit.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Subuh (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-subuh', -1)">−</button>
+              <input type="number" id="corr-subuh" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-subuh', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-subuh">--:--</span> → Koreksi: <b id="corrected-subuh" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+          <div class="form-group">
+            <label>Syuruq (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-syuruq', -1)">−</button>
+              <input type="number" id="corr-syuruq" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-syuruq', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-syuruq">--:--</span> → Koreksi: <b id="corrected-syuruq" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+          <div class="form-group">
+            <label>Dzuhur / Jum'at (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-dzuhur', -1)">−</button>
+              <input type="number" id="corr-dzuhur" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-dzuhur', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-dzuhur">--:--</span> → Koreksi: <b id="corrected-dzuhur" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+          <div class="form-group">
+            <label>Ashar (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-ashar', -1)">−</button>
+              <input type="number" id="corr-ashar" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-ashar', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-ashar">--:--</span> → Koreksi: <b id="corrected-ashar" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+          <div class="form-group">
+            <label>Maghrib (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-maghrib', -1)">−</button>
+              <input type="number" id="corr-maghrib" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-maghrib', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-maghrib">--:--</span> → Koreksi: <b id="corrected-maghrib" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+          <div class="form-group">
+            <label>Isya (menit)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-isya', -1)">−</button>
+              <input type="number" id="corr-isya" value="0" min="-60" max="60" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateCorrectionPreview()">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:18px;" onclick="adjustCorrection('corr-isya', 1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Asli: <span id="raw-isya">--:--</span> → Koreksi: <b id="corrected-isya" style="color:var(--accent-emerald);">--:--</b></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveTimeCorrections()">Simpan Koreksi Waktu</button>
+          <button class="btn btn-secondary" onclick="resetTimeCorrections()">Reset Semua ke 0</button>
+        </div>
+        <div id="corr-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <!-- Sub-Fitur 29.10.2: Koreksi Tanggal Hijriyah -->
+      <div class="card" style="margin-top:24px;">
+        <h3>Koreksi Tanggal Hijriyah (Section 29.10.2)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Sesuaikan penanggalan Hijriyah jika terjadi perbedaan hari (misal ru'yatul hilal / penetapan lokal). Nilai koreksi langsung berpengaruh pada tampilan tanggal Hijriyah di TV Display. Rentang: -5 s/d +5 hari.
+        </p>
+
+        <div style="max-width:400px;">
+          <div class="form-group">
+            <label>Koreksi Penanggalan Hijriyah (hari)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 14px; font-size:18px; font-weight:bold;" onclick="adjustHijriCorrection(-1)">−</button>
+              <input type="number" id="corr-hijri-days" value="0" min="-5" max="5" style="text-align:center; font-weight:700; font-size:16px;" oninput="updateHijriPreview()">
+              <button class="btn btn-secondary" style="padding:6px 14px; font-size:18px; font-weight:bold;" onclick="adjustHijriCorrection(1)">+</button>
+            </div>
+            <div style="font-size:13px; color:var(--text-muted); margin-top:8px;">
+              Status Koreksi: <b id="hijri-preview-text" style="color:var(--accent-emerald);">0 Hari (Standar Kalender)</b>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:16px;">
+          <button class="btn" onclick="saveHijriCorrection()">Simpan Koreksi Hijriyah</button>
+          <button class="btn btn-secondary" onclick="resetHijriCorrection()">Reset ke 0 Hari</button>
+        </div>
+        <div id="hijri-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Audio & Dzikir Settings -->
+    <div id="tab-audio" class="tab-content">
+      <div class="card">
+        <h3>Pengaturan Audio, Syuruq & Alarm Adzan (Section 29.7, 29.9)</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Durasi Alarm Adzan (detik)</label>
+            <input type="number" id="audio-adzan-duration" value="180" min="30" max="600">
+          </div>
+          <div class="form-group">
+            <label>Volume Audio Adzan (%)</label>
+            <input type="range" id="audio-adzan-vol" min="0" max="100" value="80" oninput="document.getElementById('vol-adzan-val').innerText = this.value + '%'">
+            <div style="font-size:12px; color:var(--text-muted); text-align:right;">Volume: <b id="vol-adzan-val">80%</b></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pesan Tampilan Mode Adzan</label>
+          <input type="text" id="audio-adzan-msg" value="Mari Menunaikan Shalat Berjama'ah di Masjid">
+        </div>
+        <div class="form-group">
+          <label>Custom Audio Adzan MP3 (URL / InsForge Storage)</label>
+          <div class="upload-row">
+            <input type="text" id="audio-adzan-url" placeholder="Gunakan default (Asset) atau URL custom MP3...">
+            <input type="file" id="file-adzan-mp3" accept="audio/*" style="display:none;" onchange="uploadAsset('file-adzan-mp3', 'audio-adzan-url')">
+            <button class="btn btn-secondary" onclick="document.getElementById('file-adzan-mp3').click()">☁️ Upload Audio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Pengingat Syuruq (Section 29.9)</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Status Pengingat Syuruq</label>
+            <select id="syuruq-enabled">
+              <option value="true">Aktif</option>
+              <option value="false">Nonaktif</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Durasi Layar Syuruq (menit)</label>
+            <input type="number" id="syuruq-duration" value="15" min="1" max="60">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pesan Waktu Terlarang Sholat</label>
+          <input type="text" id="syuruq-message" value="Waktu terlarang shalat saat matahari terbit hingga masuk waktu Dhuha">
+        </div>
+        <button class="btn" onclick="saveSyuruqSettings()">Simpan Pengaturan Syuruq</button>
+        <div id="syuruq-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Murottal Sebelum Adzan (Section 29.11)</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Status Murottal</label>
+            <select id="audio-murottal-enabled">
+              <option value="true">Aktif</option>
+              <option value="false">Nonaktif</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Putar (menit sebelum adzan)</label>
+            <input type="number" id="audio-murottal-before" value="10" min="1" max="30">
+          </div>
+          <div class="form-group">
+            <label>Volume Murottal (%)</label>
+            <input type="range" id="audio-murottal-vol" min="0" max="100" value="70" oninput="document.getElementById('vol-murottal-val').innerText = this.value + '%'">
+            <div style="font-size:12px; color:var(--text-muted); text-align:right;">Volume: <b id="vol-murottal-val">70%</b></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Custom Audio Murottal MP3 (URL / InsForge Storage)</label>
+          <div class="upload-row">
+            <input type="text" id="audio-murottal-url" placeholder="Gunakan default (Surah Al-Kahfi) atau URL MP3...">
+            <input type="file" id="file-murottal-mp3" accept="audio/*" style="display:none;" onchange="uploadAsset('file-murottal-mp3', 'audio-murottal-url')">
+            <button class="btn btn-secondary" onclick="document.getElementById('file-murottal-mp3').click()">☁️ Upload Audio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Dzikir Pagi & Petang (Section 29.12)</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <!-- Dzikir Pagi -->
+          <div style="padding:16px; border:1px solid var(--border-color); border-radius:12px; background:rgba(0,0,0,0.2);">
+            <h4 style="color:var(--accent-gold); margin-bottom:12px;">Dzikir Pagi (Pasca Subuh)</h4>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="audio-pagi-enabled">
+                <option value="true">Aktif</option>
+                <option value="false">Nonaktif</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Volume (%)</label>
+              <input type="range" id="audio-pagi-vol" min="0" max="100" value="75" oninput="document.getElementById('vol-pagi-val').innerText = this.value + '%'">
+              <div style="font-size:12px; color:var(--text-muted); text-align:right;">Volume: <b id="vol-pagi-val">75%</b></div>
+            </div>
+            <div class="form-group">
+              <label>Audio Dzikir Pagi MP3</label>
+              <div class="upload-row">
+                <input type="text" id="audio-pagi-url" placeholder="Default Asset atau URL MP3...">
+                <input type="file" id="file-pagi-mp3" accept="audio/*" style="display:none;" onchange="uploadAsset('file-pagi-mp3', 'audio-pagi-url')">
+                <button class="btn btn-secondary" onclick="document.getElementById('file-pagi-mp3').click()">☁️ Upload</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dzikir Petang -->
+          <div style="padding:16px; border:1px solid var(--border-color); border-radius:12px; background:rgba(0,0,0,0.2);">
+            <h4 style="color:var(--accent-emerald); margin-bottom:12px;">Dzikir Petang (Pasca Ashar)</h4>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="audio-petang-enabled">
+                <option value="true">Aktif</option>
+                <option value="false">Nonaktif</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Volume (%)</label>
+              <input type="range" id="audio-petang-vol" min="0" max="100" value="75" oninput="document.getElementById('vol-petang-val').innerText = this.value + '%'">
+              <div style="font-size:12px; color:var(--text-muted); text-align:right;">Volume: <b id="vol-petang-val">75%</b></div>
+            </div>
+            <div class="form-group">
+              <label>Audio Dzikir Petang MP3</label>
+              <div class="upload-row">
+                <input type="text" id="audio-petang-url" placeholder="Default Asset atau URL MP3...">
+                <input type="file" id="file-petang-mp3" accept="audio/*" style="display:none;" onchange="uploadAsset('file-petang-mp3', 'audio-petang-url')">
+                <button class="btn btn-secondary" onclick="document.getElementById('file-petang-mp3').click()">☁️ Upload</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveAudioSettings()">Simpan Pengaturan Audio & Dzikir</button>
+        </div>
+        <div id="audio-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Running Text (Section 29.17) -->
+    <div id="tab-running-text" class="tab-content">
+      <div class="card">
+        <h3>Tambah Running Text Baru (Section 29.17)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Kelola teks pengumuman berjalan (*running text*) yang tampil berurutan di bagian bawah layar TV Display. Data akan otomatis disinkronkan ke InsForge Backend.
+        </p>
+        <div class="form-group">
+          <label>Isi Teks Informasi / Pengumuman</label>
+          <textarea id="rt-new-text" rows="3" placeholder="Masukkan pengumuman running text... Contoh: Mohon menonaktifkan HP saat shalat berlangsung." oninput="document.getElementById('rt-preview-text').innerText = this.value || 'Pratinjau Teks Running Text...'"></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Kecepatan Animasi Marquee (Px / Detik)</label>
+            <input type="range" id="rt-speed" min="20" max="100" value="50" oninput="document.getElementById('rt-speed-val').innerText = this.value + ' px/s';">
+            <div style="font-size:12px; color:var(--text-muted); text-align:right;">Kecepatan: <b id="rt-speed-val">50 px/s</b></div>
+          </div>
+          <div class="form-group">
+            <label>Status Tampil Teks</label>
+            <select id="rt-status">
+              <option value="true">● AKTIF</option>
+              <option value="false">○ NONAKTIF</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Live Marquee Preview Box -->
+        <div class="form-group">
+          <label>Pratinjau Animasi Running Text (Live Preview)</label>
+          <div style="background:#0F172A; border:1px solid #065F46; border-radius:8px; padding:12px; overflow:hidden; white-space:nowrap; position:relative; height:45px; display:flex; align-items:center;">
+            <div id="rt-preview-text" style="color:#A7F3D0; font-family:Inter, sans-serif; font-size:16px; font-weight:600; animation: marquee-anim 12s linear infinite; display:inline-block; padding-left:100%;">
+              Selamat Datang di Masjid Al-Hidayah Siteba • Mohon menonaktifkan nada dering Handphone selama berada di dalam masjid
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" onclick="addRunningText()">+ Tambah Running Text Baru</button>
+        <div id="rt-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Daftar Running Text Masjid</h3>
+        <table class="table" style="margin-top:12px;">
+          <thead>
+            <tr>
+              <th style="width:60px;">ID</th>
+              <th>Isi Teks Informasi</th>
+              <th style="width:100px;">Kecepatan</th>
+              <th style="width:100px;">Status</th>
+              <th style="width:140px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rt-list-tbody">
+            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat daftar running text...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: QR Donasi (Section 29.16) -->
+    <div id="tab-donation" class="tab-content">
+      <div class="card">
+        <h3>Pengaturan QR Donasi & Rekening Masjid (Section 29.16)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Kelola informasi Infaq/Donasi, nama akun rekening bank, dan QR Code QRIS yang akan ditampilkan sebagai slide donasi interaktif di TV Display.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Status Tampil Slide Donasi</label>
+            <select id="donasi-enabled">
+              <option value="true">● AKTIF (Tampilkan di TV Display)</option>
+              <option value="false">○ NONAKTIF (Sembunyikan)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Judul Program Donasi</label>
+            <input type="text" id="donasi-title" value="INFAQ & DONASI MASJID" placeholder="Contoh: INFAQ & DONASI MASJID">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Deskripsi / Himbauan Donasi</label>
+          <textarea id="donasi-desc" rows="2" placeholder="Contoh: Salurkan Infaq & Sedekah Terbaik Anda melalui QRIS / Transfer Bank Nagari...">Salurkan Infaq & Sedekah Terbaik Anda melalui QRIS / Transfer Bank Nagari</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Informasi Bank & No. Rekening / Atas Nama</label>
+          <input type="text" id="donasi-account-name" value="Bank Nagari 1002.0210.09881-1 a.n Masjid Al-Hidayah" placeholder="Contoh: Bank Nagari 1002.0210.09881-1 a.n Masjid Al-Hidayah">
+        </div>
+
+        <div class="form-group">
+          <label>File / Gambar QR Code QRIS</label>
+          <div class="upload-row">
+            <input type="text" id="donasi-qr-path" placeholder="URL QR Code atau upload gambar ke InsForge Storage...">
+            <input type="file" id="file-donasi-qr" accept="image/*" style="display:none;" onchange="uploadAsset('file-donasi-qr', 'donasi-qr-path')">
+            <button class="btn btn-secondary" onclick="document.getElementById('file-donasi-qr').click()">☁️ Upload QR InsForge</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveDonationSettings()">Simpan Pengaturan QR Donasi</button>
+        </div>
+        <div id="donasi-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Mode Jum'at (Section 29.19) -->
+    <div id="tab-friday" class="tab-content">
+      <div class="card">
+        <h3>Pengaturan Mode Jum'at & Layar Khutbah (Section 29.19)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Atur perilaku tampilan jam digital khusus pada hari Jum'at (Otomatis berpindah ke Tampilan Layar Khutbah saat adzan Dzuhur hari Jum'at).
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Status Fitur Mode Jum'at</label>
+            <select id="friday-enabled">
+              <option value="true">● AKTIF (Otomatis Aktif saat Hari Jum'at)</option>
+              <option value="false">○ NONAKTIF</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nonaktifkan Countdown Iqamah saat Jum'at</label>
+            <select id="friday-disable-iqamah">
+              <option value="true">● YA (Langsung Masuk Layar Khutbah setelah Adzan)</option>
+              <option value="false">○ TIDAK (Tampilkan Countdown Iqamah)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Judul Layar Khutbah Jum'at</label>
+            <input type="text" id="friday-title" value="SELAMAT MENUNAIKAN SHALAT JUM'AT" placeholder="SELAMAT MENUNAIKAN SHALAT JUM'AT">
+          </div>
+          <div class="form-group">
+            <label>Durasi Tampilan Layar Khutbah (Menit)</label>
+            <input type="number" id="friday-duration" value="35" min="5" max="120" placeholder="35">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Pesan Himbauan Khutbah Jum'at</label>
+          <textarea id="friday-message" rows="2" placeholder="Masukkan himbauan adab khutbah...">Harap mendengarkan Khutbah Jum'at dengan khusyuk dan tidak berbicara demi kesempurnaan pahala Jum'at.</textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Nama Khatib Jum'at</label>
+            <input type="text" id="friday-khatib" value="Ust. Dr. H. Ahmad Fauzi, Lc., MA" placeholder="Nama Khatib...">
+          </div>
+          <div class="form-group">
+            <label>Nama Imam Jum'at</label>
+            <input type="text" id="friday-imam" value="Ust. M. Ridwan, Lc" placeholder="Nama Imam...">
+          </div>
+          <div class="form-group">
+            <label>Judul Tema Khutbah</label>
+            <input type="text" id="friday-theme" value="Keutamaan Menjaga Ukhuwah Islamiyah" placeholder="Tema Khutbah...">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveFridaySettings()">Simpan Pengaturan Mode Jum'at</button>
+        </div>
+        <div id="friday-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Tema & Desain (Section 29.20) -->
+    <div id="tab-theme" class="tab-content">
+      <div class="card">
+        <h3>Kustomisasi Tema, Warna & Layout Display (Section 29.20)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Sesuaikan skema warna, palet visual, dan struktur tata letak (*layout*) jam digital masjid agar selaras dengan estetika interior masjid.
+        </p>
+
+        <!-- Preset Themes -->
+        <div class="form-group">
+          <label>Pilihan Tema Preset Siap Pakai</label>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:8px;">
+            <button class="btn btn-secondary" style="background:#0F172A; border:1px solid #10B981; text-align:left;" onclick="applyPresetTheme('Modern Emerald Dark', '#10B981', '#F59E0B', '#0F172A', '#FFFFFF')">
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#10B981; margin-right:6px;"></span>
+              <b>Emerald Dark</b>
+            </button>
+            <button class="btn btn-secondary" style="background:#091E3A; border:1px solid #38BDF8; text-align:left;" onclick="applyPresetTheme('Midnight Sapphire', '#38BDF8', '#EAB308', '#091E3A', '#FFFFFF')">
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#38BDF8; margin-right:6px;"></span>
+              <b>Midnight Sapphire</b>
+            </button>
+            <button class="btn btn-secondary" style="background:#1C1917; border:1px solid #D97706; text-align:left;" onclick="applyPresetTheme('Royal Gold Classic', '#D97706', '#10B981', '#1C1917', '#FFFFFF')">
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#D97706; margin-right:6px;"></span>
+              <b>Royal Gold</b>
+            </button>
+            <button class="btn btn-secondary" style="background:#03182B; border:1px solid #0284C7; text-align:left;" onclick="applyPresetTheme('Deep Ocean Blue', '#0284C7', '#F59E0B', '#03182B', '#FFFFFF')">
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#0284C7; margin-right:6px;"></span>
+              <b>Ocean Blue</b>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Color Pickers -->
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-top:16px;">
+          <div class="form-group">
+            <label>Warna Utama (Primary)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="color" id="theme-primary-picker" value="#10B981" style="height:38px; width:45px; border:none; cursor:pointer;" onchange="document.getElementById('theme-primary').value = this.value; updateThemePreview();">
+              <input type="text" id="theme-primary" value="#10B981" oninput="updateThemePreview();">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Warna Aksens (Secondary)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="color" id="theme-secondary-picker" value="#F59E0B" style="height:38px; width:45px; border:none; cursor:pointer;" onchange="document.getElementById('theme-secondary').value = this.value; updateThemePreview();">
+              <input type="text" id="theme-secondary" value="#F59E0B" oninput="updateThemePreview();">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Warna Background (Latar)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="color" id="theme-bg-picker" value="#0F172A" style="height:38px; width:45px; border:none; cursor:pointer;" onchange="document.getElementById('theme-bg').value = this.value; updateThemePreview();">
+              <input type="text" id="theme-bg" value="#0F172A" oninput="updateThemePreview();">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Warna Teks (Text)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="color" id="theme-text-picker" value="#FFFFFF" style="height:38px; width:45px; border:none; cursor:pointer;" onchange="document.getElementById('theme-text').value = this.value; updateThemePreview();">
+              <input type="text" id="theme-text" value="#FFFFFF" oninput="updateThemePreview();">
+            </div>
+          </div>
+        </div>
+
+        <!-- Layout Mode Config -->
+        <div class="form-group" style="margin-top:16px;">
+          <label>Konfigurasi Layout Tampilan Display (Sub-Fitur 29.20.2)</label>
+          <select id="theme-layout-mode" onchange="updateThemePreview()">
+            <option value="default">● Layout Standar Balance (Header Jam + Media Center + Jadwal Shalat Under)</option>
+            <option value="hero_image">● Layout Hero Image (Poster & Video Multimedia Diperbesar)</option>
+            <option value="media_focused">● Layout Media Focused (Pengumuman Multimedia Layar Penuh)</option>
+            <option value="minimal">● Layout Minimalis Modern (Tampilan Ringkas & Kontras Tinggi)</option>
+          </select>
+        </div>
+
+        <!-- Theme Live Preview Card -->
+        <div class="form-group" style="margin-top:16px;">
+          <label>Pratinjau Tema & Warna (Live Theme Preview)</label>
+          <div id="theme-preview-card" style="background:#0F172A; border:2px solid #10B981; border-radius:12px; padding:20px; color:#FFFFFF;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+              <div>
+                <b id="prev-mosque-name" style="font-size:18px; color:#10B981;">MASJID AL-HIDAYAH SITEBA</b>
+                <div style="font-size:12px; opacity:0.8;">Padang, Sumatera Barat</div>
+              </div>
+              <div style="text-align:right;">
+                <b style="font-size:22px; color:#F59E0B;">12:28:45</b>
+                <div style="font-size:11px; opacity:0.8;">Dzuhur 12:28 • 14 Safar 1448 H</div>
+              </div>
+            </div>
+            <div style="margin:16px 0; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; text-align:center;">
+              <span id="prev-badge" style="background:#10B981; color:#000; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">PREVIEW MEDIA</span>
+              <div style="margin-top:6px; font-size:14px;">Contoh Tampilan Multimedia & Pengumuman Masjid</div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; text-align:center; font-size:12px;">
+              <div style="background:rgba(255,255,255,0.08); padding:6px; border-radius:6px;">Subuh<br><b>05:04</b></div>
+              <div style="background:rgba(255,255,255,0.08); padding:6px; border-radius:6px;">Syuruq<br><b>06:19</b></div>
+              <div style="background:#10B981; color:#000; padding:6px; border-radius:6px; font-weight:bold;">Dzuhur<br>12:28</div>
+              <div style="background:rgba(255,255,255,0.08); padding:6px; border-radius:6px;">Ashar<br><b>15:50</b></div>
+              <div style="background:rgba(255,255,255,0.08); padding:6px; border-radius:6px;">Maghrib<br><b>18:30</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn" onclick="saveThemeSettings()">Simpan Kustomisasi Tema & Layout</button>
+          <button class="btn btn-secondary" onclick="resetThemeSettings()">Reset ke Tema Standar</button>
+        </div>
+        <div id="theme-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Agenda & Hari Besar Islam (Section 29.18) -->
+    <div id="tab-agendas" class="tab-content">
+      <div class="card">
+        <h3>Tambah Agenda / Hari Besar Islam Baru (Section 29.18)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Kelola agenda kegiatan masjid & peringatan Hari Besar Islam yang akan disajikan secara visual pada TV Display.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Judul Agenda / Event</label>
+            <input type="text" id="agenda-title" placeholder="Contoh: Kajian Rutin Subuh / Isra Mi'raj">
+          </div>
+          <div class="form-group">
+            <label>Status Aktif</label>
+            <select id="agenda-status">
+              <option value="true">● AKTIF (Tampilkan di Display)</option>
+              <option value="false">○ NONAKTIF</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Deskripsi / Rincian Acara</label>
+          <textarea id="agenda-desc" rows="2" placeholder="Contoh: Pemateri: Ust. Dr. H. Ahmad Fauzi • Tema: Fiqh Ibadah & Tazkiyatun Nufus"></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Tanggal & Waktu Mulai</label>
+            <input type="datetime-local" id="agenda-starts-at">
+          </div>
+          <div class="form-group">
+            <label>Tanggal & Waktu Selesai (Opsional)</label>
+            <input type="datetime-local" id="agenda-ends-at">
+          </div>
+        </div>
+
+        <button class="btn" onclick="addAgenda()">+ Tambah Agenda Baru</button>
+        <div id="agenda-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Daftar Agenda & Hari Besar Islam</h3>
+        <table class="table" style="margin-top:12px;">
+          <thead>
+            <tr>
+              <th style="width:60px;">ID</th>
+              <th>Judul Agenda</th>
+              <th>Rincian Acara</th>
+              <th style="width:160px;">Jadwal Pelaksanaan</th>
+              <th style="width:100px;">Status</th>
+              <th style="width:140px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="agendas-list-tbody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Memuat daftar agenda...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Konten Multimedia (Section 29.13) -->
+    <div id="tab-media" class="tab-content">
+      <div class="card">
+        <h3>Tambah Konten Multimedia Baru (Section 29.13)</h3>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
+          Kelola slide multimedia yang diputar berurutan di layar utama TV Display (Gambar Poster, Video MP4, YouTube, atau Pengumuman Teks). Aset file akan diunggah ke InsForge Storage bucket <code>masjid-assets</code>.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Tipe Konten Multimedia</label>
+            <select id="media-type" onchange="toggleMediaTypeFields()">
+              <option value="hadith">Ayat Al-Qur'an / Hadits / Mutiara Hikmah (Dakwah Teks)</option>
+
+              <option value="announcement">Pengumuman Teks / Agenda Kajian</option>
+              <option value="infoTable">Tabel Informasi / Jadwal Khutbah / Agenda (Section 29.15)</option>
+              <option value="kasTable">Tabel Laporan Rekapitulasi Kas Masjid (Section 29.15)</option>
+              <option value="image">Gambar / Poster Slide (JPG/PNG/WebP)</option>
+              <option value="video">Video MP4 / WebM</option>
+              <option value="youtube">YouTube Video Embed</option>
+              <option value="livestream">YouTube Livestream Embed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Durasi Tampil Slide (detik)</label>
+            <input type="number" id="media-duration" value="10" min="3" max="300">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label>Judul Slide / Pengumuman / Tema Dakwah</label>
+            <input type="text" id="media-title" placeholder="Contoh: HADITS HARI INI / KEUTAMAAN SHALAT">
+          </div>
+          <div class="form-group" id="media-subtitle-group">
+            <label>Sub-Judul / Perawi / Sumber (Opsional)</label>
+            <input type="text" id="media-subtitle" placeholder="Contoh: (HR. Bukhari & Muslim) atau Ustadz Ahmad Fauzi">
+          </div>
+        </div>
+
+
+        <div class="form-group" id="media-arabic-group" style="display:none;">
+          <label style="color:var(--accent-gold);">Teks Arab (Ayat Al-Qur'an / Lafadz Hadits)</label>
+          <textarea id="media-arabic-text" rows="2" dir="rtl" style="font-family:'Amiri', serif; font-size:18px; text-align:right;" placeholder="مَنْ بَنَى مَسْجِدًالِلَّهِ بَنَى اللَّهُ لَهُ مِثْلَهُ فِي الْجَنَّةِ..."></textarea>
+        </div>
+
+        <div class="form-group" id="media-url-group">
+          <label id="media-url-label">File / URL Gambar</label>
+          <div class="upload-row">
+            <input type="text" id="media-url" placeholder="URL media atau upload via InsForge Cloud Storage...">
+            <input type="file" id="file-media-asset" accept="image/jpeg,image/png,image/webp,image/svg+xml,video/mp4,video/webm" style="display:none;" onchange="uploadAsset('file-media-asset', 'media-url')">
+            <button class="btn btn-secondary" onclick="document.getElementById('file-media-asset').click()">☁️ Upload InsForge</button>
+          </div>
+        </div>
+
+        <!-- Builder Tabel Informasi (Section 29.15) -->
+        <div id="media-table-builder-group" class="form-group" style="display:none; background:#0F172A; padding:16px; border-radius:8px; border:1px solid #334155; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <label style="color:#38BDF8; font-weight:bold; margin:0; font-size:15px;">📊 Builder Tabel Informasi (Section 29.15)</label>
+            <div>
+              <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="loadTablePreset('khutbah')">📅 Preset Khutbah</button>
+              <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px; margin-left:4px;" onclick="loadTablePreset('kas')">💰 Preset Kas Masjid</button>
+            </div>
+          </div>
+          
+          <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="addTableColumn()">+ Tambah Kolom</button>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="removeTableColumn()">- Hapus Kolom</button>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="addTableRow()">+ Tambah Baris</button>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="removeTableRow()">- Hapus Baris</button>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table id="table-builder-grid" class="schedule-table" style="background:#1E293B; border-radius:6px; width:100%;">
+              <thead id="table-builder-thead"></thead>
+              <tbody id="table-builder-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="form-group" id="media-content-group">
+          <label>Deskripsi Konten / Poster (Opsional)</label>
+          <textarea id="media-content" rows="3" placeholder="Deskripsi yang akan tampil di frontend..."></textarea>
+        </div>
+
+        <button class="btn" onclick="addMediaSlide()">+ Tambah Konten Multimedia</button>
+        <div id="media-status-msg" style="margin-top:12px; font-size:14px; color:var(--accent-emerald); display:none;"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Daftar Slide Multimedia Aktif (Maksimal 10 Data)</h3>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipe</th>
+              <th>Judul / Media URL</th>
+              <th>Durasi</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="media-tbody">
+            <tr>
+              <td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Memuat daftar media...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-account" class="tab-content">
+      <div class="card">
+        <h3>Profil Akun Admin</h3>
+        <div class="form-group"><label>Email</label><input id="account-email" type="email" readonly></div>
+        <div class="form-group"><label>Nama</label><input id="account-name" maxlength="100" autocomplete="name"></div>
+        <div class="form-group"><label>URL Foto Profil (opsional)</label><input id="account-avatar" type="url" maxlength="500" placeholder="https://..."></div>
+        <button class="btn" onclick="saveAccountProfile()">Simpan Profil</button>
+        <div id="account-profile-status" style="margin-top:12px; display:none;"></div>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <h3>Ganti Password</h3>
+        <p style="color:var(--text-muted); margin-bottom:16px;">Kode verifikasi 6 digit dikirim ke email akun.</p>
+        <button class="btn btn-secondary" onclick="sendPasswordCode()">Kirim Kode Verifikasi</button>
+        <div class="form-group" style="margin-top:16px;"><label>Kode Verifikasi</label><input id="account-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+        <div class="form-group"><label>Password Baru</label><input id="account-password" type="password" minlength="6" maxlength="200" autocomplete="new-password"></div>
+        <div class="form-group"><label>Konfirmasi Password Baru</label><input id="account-password-confirmation" type="password" minlength="6" maxlength="200" autocomplete="new-password"></div>
+        <button class="btn" onclick="changeAccountPassword()">Ganti Password</button>
+        <div id="account-password-status" style="margin-top:12px; display:none;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = `${location.origin}/api/v1`;
+    const FUNCTION_URL = 'https://2a5hq4xh.function2.insforge.app/masjid-backend';
+    let authToken = localStorage.getItem('insforge_admin_token');
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const requestUrl = new URL(typeof input === 'string' ? input : input.url, location.origin);
+      const isBackendApi = requestUrl.pathname.startsWith('/api/v1/');
+      const isAdminApi = requestUrl.pathname.startsWith('/api/v1/admin/') && requestUrl.pathname !== '/api/v1/admin/login';
+      const headers = new Headers(init.headers || (typeof input !== 'string' ? input.headers : undefined));
+      if (isAdminApi && authToken) headers.set('Authorization', `Bearer ${authToken}`);
+      let target = input;
+      if (isBackendApi) {
+        const functionUrl = new URL(FUNCTION_URL);
+        functionUrl.searchParams.set('route', requestUrl.pathname);
+        requestUrl.searchParams.forEach((value, key) => functionUrl.searchParams.append(key, value));
+        target = functionUrl.toString();
+      }
+      const response = await nativeFetch(target, { ...init, headers });
+      if (isAdminApi && response.status === 401) {
+        authToken = null;
+        localStorage.removeItem('insforge_admin_token');
+        document.getElementById('login-overlay').style.display = 'flex';
+      }
+      return response;
+    };
+
+    if (authToken) {
+      document.getElementById('login-overlay').style.display = 'none';
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      document.getElementById('login-error').style.display = 'none';
+
+      try {
+        const res = await fetch(API_BASE + '/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const json = await res.json();
+        if (res.ok && json.status === 'success') {
+          authToken = json.data.token;
+          localStorage.setItem('insforge_admin_token', authToken);
+          document.getElementById('login-overlay').style.display = 'none';
+          loadAllAdminData();
+        } else {
+          document.getElementById('login-error').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
+
+    function loadAllAdminData() {
+      loadDashboardSummary();
+      loadProfileData();
+      loadTimeCorrections();
+      loadHijriCorrection();
+      loadAudioSettings();
+      loadSyuruqSettings();
+      loadMonthlySchedule();
+      loadIqamahSettings();
+      loadMediaSlides();
+      loadRunningTexts();
+      loadDonationSettings();
+      loadFridaySettings();
+      loadAgendas();
+      loadThemeSettings();
+      loadAccountSettings();
+    }
+
+    function doLogout() {
+      localStorage.removeItem('insforge_admin_token');
+      location.reload();
+    }
+
+    function showTab(tabName, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item button').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      if (btn) btn.classList.add('active');
+      if (tabName === 'jadwal') loadMonthlySchedule();
+      if (tabName === 'iqamah') loadIqamahSettings();
+      if (tabName === 'koreksi') { loadTimeCorrections(); loadHijriCorrection(); }
+      if (tabName === 'audio') { loadAudioSettings(); loadSyuruqSettings(); }
+      if (tabName === 'donation') loadDonationSettings();
+      if (tabName === 'friday') loadFridaySettings();
+      if (tabName === 'agendas') loadAgendas();
+      if (tabName === 'theme') loadThemeSettings();
+      if (tabName === 'media') loadMediaSlides();
+      if (tabName === 'running-text') loadRunningTexts();
+      if (tabName === 'account') loadAccountSettings();
+    }
+
+    function accountStatus(id, message, success) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.style.color = success ? 'var(--accent-emerald)' : '#EF4444';
+      el.style.display = 'block';
+    }
+
+    async function loadAccountSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/account');
+        const json = await res.json();
+        if (!res.ok) return;
+        document.getElementById('account-email').value = json.data.email || '';
+        document.getElementById('account-name').value = json.data.profile?.name || '';
+        document.getElementById('account-avatar').value = json.data.profile?.avatar_url || '';
+      } catch (_) {}
+    }
+
+    async function saveAccountProfile() {
+      const res = await fetch(API_BASE + '/admin/account/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: document.getElementById('account-name').value, avatar_url: document.getElementById('account-avatar').value }) });
+      const json = await res.json();
+      accountStatus('account-profile-status', json.message || 'Profil gagal diperbarui', res.ok);
+    }
+
+    async function sendPasswordCode() {
+      const res = await fetch(API_BASE + '/admin/account/password/code', { method: 'POST' });
+      const json = await res.json();
+      accountStatus('account-password-status', json.message || 'Kode gagal dikirim', res.ok);
+    }
+
+    async function changeAccountPassword() {
+      const password = document.getElementById('account-password').value;
+      const confirmation = document.getElementById('account-password-confirmation').value;
+      if (password.length < 6 || password !== confirmation) return accountStatus('account-password-status', password.length < 6 ? 'Password minimal 6 karakter' : 'Konfirmasi password tidak sama', false);
+      const res = await fetch(API_BASE + '/admin/account/password', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: document.getElementById('account-code').value, password, password_confirmation: confirmation }) });
+      const json = await res.json();
+      accountStatus('account-password-status', json.message || 'Password gagal diperbarui', res.ok);
+      if (res.ok) setTimeout(doLogout, 1500);
+    }
+
+    function updatePreview() {
+      const name = document.getElementById('prof-name').value || 'NAMA MASJID';
+      const address = document.getElementById('prof-address').value || 'Alamat Masjid';
+      const logoUrl = document.getElementById('prof-logo').value;
+
+      document.getElementById('prev-name').innerText = name;
+      document.getElementById('prev-address').innerText = address;
+      
+      const logoBox = document.getElementById('prev-logo-box');
+      if (logoUrl && logoUrl.trim() !== '') {
+        logoBox.innerHTML = `<img src="${logoUrl}" alt="Logo">`;
+      } else {
+        logoBox.innerHTML = `🕌`;
+      }
+    }
+
+    async function saveActiveLocation() {
+      const cityCode = document.getElementById('loc-city').value;
+      const citySelect = document.getElementById('loc-city');
+      const cityName = citySelect.options[citySelect.selectedIndex].text.split(' (')[0];
+      const provName = document.getElementById('loc-province').value;
+
+      const res = await fetch(API_BASE + '/admin/locations/active', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ province_name: provName, city_code: cityCode, city_name: cityName })
+      });
+      const json = await res.json();
+      if (json.status === 'success') {
+        alert('Lokasi jadwal sholat aktif disimpan: ' + cityName);
+        loadDashboardSummary();
+      }
+    }
+
+    async function syncEQuranSchedule() {
+      const statusMsg = document.getElementById('sync-status-msg');
+      statusMsg.innerText = '⚡ Memuat jadwal dari MyQuran API...';
+      statusMsg.style.display = 'block';
+
+      try {
+        const res = await fetch(API_BASE + '/admin/jadwal/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ ' + json.message;
+          renderScheduleTable(json.data.schedules);
+          loadDashboardSummary();
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyinkronkan jadwal MyQuran API';
+      }
+    }
+
+    function renderScheduleTable(schedules) {
+      const tbody = document.getElementById('schedule-tbody');
+      if (!schedules || schedules.length === 0) return;
+      tbody.innerHTML = schedules.slice(0, 15).map(s => `
+        <tr>
+          <td><b>${s.date}</b></td>
+          <td>${s.imsak}</td>
+          <td>${s.subuh}</td>
+          <td>${s.syuruq}</td>
+          <td>${s.dzuhur}</td>
+          <td>${s.ashar}</td>
+          <td>${s.maghrib}</td>
+          <td>${s.isya}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function uploadAsset(fileInputId, targetUrlInputId) {
+      const fileInput = document.getElementById(fileInputId);
+      if (!fileInput.files || fileInput.files.length === 0) return;
+      const file = fileInput.files[0];
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const res = await fetch(API_BASE + '/admin/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              fileData: e.target.result
+            })
+          });
+          const json = await res.json();
+          if (json.status === 'success' && json.data && json.data.url) {
+            document.getElementById(targetUrlInputId).value = json.data.url;
+            updatePreview();
+            alert('Asset berhasil diunggah ke InsForge Storage (bucket: "masjid-assets")!\nURL: ' + json.data.url);
+          } else {
+            alert('⚠️ Gagal mengunggah asset ke InsForge Storage');
+          }
+        } catch (err) {
+          console.error('Upload asset error:', err);
+          alert('⚠️ Gagal mengunggah asset ke InsForge Storage');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function loadProfileData() {
+      try {
+        const res = await fetch(API_BASE + '/admin/mosque-profile');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const p = json.data;
+          document.getElementById('prof-name').value = p.name || '';
+          document.getElementById('prof-address').value = p.address || '';
+          document.getElementById('prof-contact').value = p.contact || '';
+          document.getElementById('prof-timezone').value = p.timezone || 'Asia/Jakarta';
+          document.getElementById('prof-logo').value = p.logo_path || '';
+          document.getElementById('prof-bg').value = p.background_path || '';
+          updatePreview();
+        }
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+      }
+    }
+
+    async function loadDashboardSummary() {
+      try {
+        const res = await fetch(API_BASE + '/admin/dashboard/summary');
+        const json = await res.json();
+        if (json.status === 'success') {
+          const d = json.data;
+          document.getElementById('stat-status').innerText = d.displayStatus;
+          document.getElementById('stat-location').innerText = d.activeLocation.city_name;
+          document.getElementById('stat-rt').innerText = d.activeRunningTextCount + ' ITEM';
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard summary:', err);
+      }
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById('prof-name').value;
+      const errorEl = document.getElementById('prof-error');
+      errorEl.style.display = 'none';
+
+      if (!name || name.trim() === '') {
+        errorEl.innerText = 'Nama masjid wajib diisi';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const payload = {
+        name: name,
+        address: document.getElementById('prof-address').value,
+        contact: document.getElementById('prof-contact').value,
+        timezone: document.getElementById('prof-timezone').value,
+        logo_path: document.getElementById('prof-logo').value,
+        background_path: document.getElementById('prof-bg').value
+      };
+
+      const res = await fetch(API_BASE + '/admin/mosque-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.status === 'success') {
+        alert('Profil Masjid & Aset Storage berhasil disimpan!');
+      } else {
+        errorEl.innerText = json.message || 'Gagal menyimpan profil';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    // === Section 29.4: Koreksi Waktu Sholat Functions ===
+    let rawScheduleCache = null;
+
+    function adjustTimeStringJS(timeStr, offsetMinutes) {
+      if (!timeStr || timeStr === '--:--') return '--:--';
+      const offset = parseInt(offsetMinutes, 10) || 0;
+      const parts = timeStr.split(':');
+      if (parts.length < 2) return timeStr;
+      let h = parseInt(parts[0], 10);
+      let m = parseInt(parts[1], 10);
+      if (isNaN(h) || isNaN(m)) return timeStr;
+      let totalMin = h * 60 + m + offset;
+      totalMin = (totalMin + 1440) % 1440;
+      const newH = Math.floor(totalMin / 60).toString().padStart(2, '0');
+      const newM = (totalMin % 60).toString().padStart(2, '0');
+      return `${newH}:${newM}`;
+    }
+
+    function adjustCorrection(inputId, delta) {
+      const input = document.getElementById(inputId);
+      let val = parseInt(input.value, 10) || 0;
+      val = Math.max(-60, Math.min(60, val + delta));
+      input.value = val;
+      updateCorrectionPreview();
+    }
+
+    function updateCorrectionPreview() {
+      if (!rawScheduleCache) return;
+      const fields = ['subuh', 'syuruq', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+      fields.forEach(f => {
+        const raw = rawScheduleCache[f] || '--:--';
+        const offset = parseInt(document.getElementById('corr-' + f).value, 10) || 0;
+        document.getElementById('raw-' + f).innerText = raw;
+        document.getElementById('corrected-' + f).innerText = adjustTimeStringJS(raw, offset);
+      });
+    }
+
+    async function loadTimeCorrections() {
+      try {
+        // Load current corrections
+        const corrRes = await fetch(API_BASE + '/admin/time-corrections');
+        const corrJson = await corrRes.json();
+        if (corrJson.status === 'success' && corrJson.data) {
+          const c = corrJson.data;
+          document.getElementById('corr-subuh').value = c.subuh || 0;
+          document.getElementById('corr-syuruq').value = c.syuruq || 0;
+          document.getElementById('corr-dzuhur').value = c.dzuhur || 0;
+          document.getElementById('corr-ashar').value = c.ashar || 0;
+          document.getElementById('corr-maghrib').value = c.maghrib || 0;
+          document.getElementById('corr-isya').value = c.isya || 0;
+        }
+        // Load raw schedule for preview
+        const stateRes = await fetch(API_BASE.replace('/admin', '') + '/display/state');
+        const stateJson = await stateRes.json();
+        if (stateJson.status === 'success' && stateJson.data) {
+          rawScheduleCache = stateJson.data.rawSchedule || stateJson.data.todaySchedule;
+          updateCorrectionPreview();
+        }
+      } catch (e) {
+        console.error('Failed to load time corrections:', e);
+      }
+    }
+
+    async function loadIqamahSettings() {
+      try {
+        const res = await fetch('/api/v1/admin/iqamah-settings');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const d = json.data;
+          const prayers = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+          prayers.forEach(p => {
+            if (d[p]) {
+              const durEl = document.getElementById('iqamah-' + p + '-dur');
+              const enEl = document.getElementById('iqamah-' + p + '-enabled');
+              if (durEl) durEl.value = d[p].duration_minutes ?? 10;
+              if (enEl) enEl.value = d[p].is_enabled !== false ? 'true' : 'false';
+            }
+          });
+          if (d.message) {
+            const msgEl = document.getElementById('iqamah-screen-msg');
+            if (msgEl) msgEl.value = d.message;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load iqamah settings:', err);
+      }
+    }
+
+    async function saveIqamahSettings() {
+      const prayers = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+      const payload = {};
+      prayers.forEach(p => {
+        const durEl = document.getElementById('iqamah-' + p + '-dur');
+        const enEl = document.getElementById('iqamah-' + p + '-enabled');
+        payload[p] = {
+          duration_minutes: parseInt(durEl.value) || 5,
+          is_enabled: enEl.value === 'true'
+        };
+      });
+      const msgEl = document.getElementById('iqamah-screen-msg');
+      if (msgEl) payload.message = msgEl.value;
+
+      try {
+        const res = await fetch('/api/v1/admin/iqamah-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        const statusEl = document.getElementById('iqamah-status-msg');
+        if (json.status === 'success') {
+          statusEl.style.display = 'block';
+          statusEl.innerText = '✅ Pengaturan Countdown Iqamah berhasil disimpan!';
+          setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+        } else {
+          alert('Gagal menyimpan: ' + (json.message || 'Error'));
+        }
+      } catch (err) {
+        alert('Gagal menyimpan pengaturan Iqamah: ' + err.message);
+      }
+    }
+
+    async function saveTimeCorrections() {
+      const statusMsg = document.getElementById('corr-status-msg');
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        subuh: parseInt(document.getElementById('corr-subuh').value, 10) || 0,
+        syuruq: parseInt(document.getElementById('corr-syuruq').value, 10) || 0,
+        dzuhur: parseInt(document.getElementById('corr-dzuhur').value, 10) || 0,
+        ashar: parseInt(document.getElementById('corr-ashar').value, 10) || 0,
+        maghrib: parseInt(document.getElementById('corr-maghrib').value, 10) || 0,
+        isya: parseInt(document.getElementById('corr-isya').value, 10) || 0
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/time-corrections', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ ' + json.message;
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+          // Reload raw schedule to update corrected preview
+          const stateRes = await fetch(API_BASE.replace('/admin', '') + '/display/state');
+          const stateJson = await stateRes.json();
+          if (stateJson.status === 'success' && stateJson.data) {
+            rawScheduleCache = stateJson.data.rawSchedule || stateJson.data.todaySchedule;
+            updateCorrectionPreview();
+          }
+        } else {
+          statusMsg.innerText = '⚠️ ' + (json.message || 'Gagal menyimpan koreksi');
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan koreksi waktu';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    function resetTimeCorrections() {
+      ['subuh', 'syuruq', 'dzuhur', 'ashar', 'maghrib', 'isya'].forEach(f => {
+        document.getElementById('corr-' + f).value = 0;
+      });
+      updateCorrectionPreview();
+    }
+
+    // Sub-Fitur 29.10.2: Hijri Correction JS
+    function adjustHijriCorrection(delta) {
+      const input = document.getElementById('corr-hijri-days');
+      let val = parseInt(input.value, 10) || 0;
+      val = Math.max(-5, Math.min(5, val + delta));
+      input.value = val;
+      updateHijriPreview();
+    }
+
+    function updateHijriPreview() {
+      const days = parseInt(document.getElementById('corr-hijri-days').value, 10) || 0;
+      const textEl = document.getElementById('hijri-preview-text');
+      if (!textEl) return;
+      if (days === 0) {
+        textEl.innerText = '0 Hari (Standar Kalender)';
+        textEl.style.color = 'var(--accent-emerald)';
+      } else if (days > 0) {
+        textEl.innerText = `+${days} Hari (Maju ${days} hari)`;
+        textEl.style.color = '#F59E0B';
+      } else {
+        textEl.innerText = `${days} Hari (Mundur ${Math.abs(days)} hari)`;
+        textEl.style.color = '#38BDF8';
+      }
+    }
+
+    async function loadHijriCorrection() {
+      try {
+        const res = await fetch(API_BASE + '/admin/hijri-correction');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          document.getElementById('corr-hijri-days').value = json.data.hijriCorrectionDays || 0;
+          updateHijriPreview();
+        }
+      } catch (e) {
+        console.error('Failed to load hijri correction:', e);
+      }
+    }
+
+    async function saveHijriCorrection() {
+      const statusMsg = document.getElementById('hijri-status-msg');
+      statusMsg.style.display = 'none';
+      const days = parseInt(document.getElementById('corr-hijri-days').value, 10) || 0;
+
+      try {
+        const res = await fetch(API_BASE + '/admin/hijri-correction', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hijriCorrectionDays: days })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ ' + json.message;
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+          updateHijriPreview();
+        } else {
+          statusMsg.innerText = '⚠️ ' + (json.message || 'Gagal menyimpan koreksi Hijriyah');
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan koreksi Hijriyah';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    function resetHijriCorrection() {
+      document.getElementById('corr-hijri-days').value = 0;
+      updateHijriPreview();
+      saveHijriCorrection();
+    }
+
+    // Sub-Fitur 29.7, 29.11, 29.12: Audio & Dzikir Settings JS
+    async function loadAudioSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/audio-settings');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const adzan = json.data.adzanSettings || {};
+          const audio = json.data.audioSettings || {};
+
+          document.getElementById('audio-adzan-duration').value = adzan.durationSeconds || 180;
+          document.getElementById('audio-adzan-msg').value = adzan.displayMessage || '';
+          if (audio.adzan) {
+            document.getElementById('audio-adzan-vol').value = audio.adzan.volume || 80;
+            document.getElementById('vol-adzan-val').innerText = (audio.adzan.volume || 80) + '%';
+            document.getElementById('audio-adzan-url').value = audio.adzan.custom_url || '';
+          }
+          if (audio.murottal) {
+            document.getElementById('audio-murottal-enabled').value = audio.murottal.is_enabled !== false ? 'true' : 'false';
+            document.getElementById('audio-murottal-before').value = audio.murottal.play_before_minutes || 10;
+            document.getElementById('audio-murottal-vol').value = audio.murottal.volume || 70;
+            document.getElementById('vol-murottal-val').innerText = (audio.murottal.volume || 70) + '%';
+            document.getElementById('audio-murottal-url').value = audio.murottal.custom_url || '';
+          }
+          if (audio.dzikir_pagi) {
+            document.getElementById('audio-pagi-enabled').value = audio.dzikir_pagi.is_enabled !== false ? 'true' : 'false';
+            document.getElementById('audio-pagi-vol').value = audio.dzikir_pagi.volume || 75;
+            document.getElementById('vol-pagi-val').innerText = (audio.dzikir_pagi.volume || 75) + '%';
+            document.getElementById('audio-pagi-url').value = audio.dzikir_pagi.custom_url || '';
+          }
+          if (audio.dzikir_petang) {
+            document.getElementById('audio-petang-enabled').value = audio.dzikir_petang.is_enabled !== false ? 'true' : 'false';
+            document.getElementById('audio-petang-vol').value = audio.dzikir_petang.volume || 75;
+            document.getElementById('vol-petang-val').innerText = (audio.dzikir_petang.volume || 75) + '%';
+            document.getElementById('audio-petang-url').value = audio.dzikir_petang.custom_url || '';
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load audio settings:', e);
+      }
+    }
+
+    async function saveAudioSettings() {
+      const statusMsg = document.getElementById('audio-status-msg');
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        adzanSettings: {
+          durationSeconds: parseInt(document.getElementById('audio-adzan-duration').value, 10) || 180,
+          displayMessage: document.getElementById('audio-adzan-msg').value || "Mari Menunaikan Shalat Berjama'ah di Masjid"
+        },
+        audioSettings: {
+          adzan: {
+            is_enabled: true,
+            volume: parseInt(document.getElementById('audio-adzan-vol').value, 10) || 80,
+            custom_url: document.getElementById('audio-adzan-url').value || null
+          },
+          murottal: {
+            is_enabled: document.getElementById('audio-murottal-enabled').value === 'true',
+            play_before_minutes: parseInt(document.getElementById('audio-murottal-before').value, 10) || 10,
+            volume: parseInt(document.getElementById('audio-murottal-vol').value, 10) || 70,
+            custom_url: document.getElementById('audio-murottal-url').value || null
+          },
+          dzikir_pagi: {
+            is_enabled: document.getElementById('audio-pagi-enabled').value === 'true',
+            volume: parseInt(document.getElementById('audio-pagi-vol').value, 10) || 75,
+            custom_url: document.getElementById('audio-pagi-url').value || null
+          },
+          dzikir_petang: {
+            is_enabled: document.getElementById('audio-petang-enabled').value === 'true',
+            volume: parseInt(document.getElementById('audio-petang-vol').value, 10) || 75,
+            custom_url: document.getElementById('audio-petang-url').value || null
+          }
+        }
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/audio-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ ' + json.message;
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+        } else {
+          statusMsg.innerText = '⚠️ ' + (json.message || 'Gagal menyimpan pengaturan audio');
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan audio';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    async function loadSyuruqSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/syuruq-settings');
+        const json = await res.json();
+        if (json.status !== 'success' || !json.data) return;
+        document.getElementById('syuruq-enabled').value = json.data.is_enabled !== false ? 'true' : 'false';
+        document.getElementById('syuruq-duration').value = json.data.durationMinutes || 15;
+        document.getElementById('syuruq-message').value = json.data.displayMessage || 'Waktu terlarang shalat saat matahari terbit hingga masuk waktu Dhuha';
+      } catch (e) {
+        console.error('Failed to load syuruq settings:', e);
+      }
+    }
+
+    async function saveSyuruqSettings() {
+      const statusMsg = document.getElementById('syuruq-status-msg');
+      statusMsg.style.display = 'none';
+      try {
+        const res = await fetch(API_BASE + '/admin/syuruq-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            is_enabled: document.getElementById('syuruq-enabled').value === 'true',
+            durationMinutes: parseInt(document.getElementById('syuruq-duration').value, 10) || 15,
+            displayMessage: document.getElementById('syuruq-message').value || 'Waktu terlarang shalat saat matahari terbit hingga masuk waktu Dhuha'
+          })
+        });
+        const json = await res.json();
+        statusMsg.innerText = (json.status === 'success' ? '✓ ' : '⚠️ ') + (json.message || 'Gagal menyimpan pengaturan syuruq');
+        statusMsg.style.color = json.status === 'success' ? 'var(--accent-emerald)' : '#EF4444';
+        statusMsg.style.display = 'block';
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan syuruq';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    // Section 29.16: QR Donasi Settings JS
+    async function loadDonationSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/donation-settings');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const d = json.data;
+          document.getElementById('donasi-enabled').value = d.is_active !== false ? 'true' : 'false';
+          document.getElementById('donasi-title').value = d.title || 'INFAQ & DONASI MASJID';
+          document.getElementById('donasi-desc').value = d.description || '';
+          document.getElementById('donasi-account-name').value = d.account_name || '';
+          document.getElementById('donasi-qr-path').value = d.qr_code_path || d.qr_code_url || '';
+        }
+      } catch (e) {
+        console.error('Failed to load donation settings:', e);
+      }
+    }
+
+    async function saveDonationSettings() {
+      const statusMsg = document.getElementById('donasi-status-msg');
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        is_active: document.getElementById('donasi-enabled').value === 'true',
+        title: document.getElementById('donasi-title').value.trim() || 'INFAQ & DONASI MASJID',
+        description: document.getElementById('donasi-desc').value.trim(),
+        account_name: document.getElementById('donasi-account-name').value.trim(),
+        qr_code_path: document.getElementById('donasi-qr-path').value.trim() || null
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/donation-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ Pengaturan QR Donasi berhasil disimpan dan disinkronkan!';
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+        } else {
+          statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan donasi';
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan donasi';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    // Section 29.17: Running Text JS
+    async function loadRunningTexts() {
+      try {
+        const res = await fetch(API_BASE + '/admin/running-text');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          renderRunningTextsTable(json.data);
+        }
+      } catch (e) {
+        console.error('Failed to load running texts:', e);
+      }
+    }
+
+    function renderRunningTextsTable(list) {
+      const tbody = document.getElementById('rt-list-tbody');
+      if (!tbody) return;
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data running text.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => `
+        <tr>
+          <td>#${item.id}</td>
+          <td style="max-width:400px; word-wrap:break-word;">${escapeHtml(item.text)}</td>
+          <td><b>${item.speed || 50} px/s</b></td>
+          <td>
+            <span class="badge ${item.is_active ? 'badge-success' : 'badge-danger'}">
+              ${item.is_active ? '● Aktif' : '○ Nonaktif'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px; margin-right:4px;" onclick="toggleRunningText(${item.id}, ${!item.is_active})">
+              ${item.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            </button>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:12px; background:#EF4444; color:#fff;" onclick="deleteRunningText(${item.id})">
+              Hapus
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addRunningText() {
+      const statusMsg = document.getElementById('rt-status-msg');
+      statusMsg.style.display = 'none';
+      const text = document.getElementById('rt-new-text').value.trim();
+      const speed = parseInt(document.getElementById('rt-speed').value, 10) || 50;
+      const is_active = document.getElementById('rt-status').value === 'true';
+
+      if (!text) {
+        alert('Isi teks pengumuman tidak boleh kosong!');
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/admin/running-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, speed, is_active })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ Running text berhasil ditambahkan dan disinkronkan ke InsForge!';
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+          document.getElementById('rt-new-text').value = '';
+          loadRunningTexts();
+        } else {
+          statusMsg.innerText = '⚠️ Gagal menambahkan running text';
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menambahkan running text';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    async function toggleRunningText(id, newStatus) {
+      try {
+        const res = await fetch(API_BASE + '/admin/running-text/toggle', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_active: newStatus })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadRunningTexts();
+        }
+      } catch (e) {
+        console.error('Failed to toggle running text:', e);
+      }
+    }
+
+    async function deleteRunningText(id) {
+      if (!confirm('Apakah Anda yakin ingin menghapus running text ini?')) return;
+      try {
+        const res = await fetch(API_BASE + '/admin/running-text', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadRunningTexts();
+        }
+      } catch (e) {
+        console.error('Failed to delete running text:', e);
+      }
+    }
+
+    // Section 29.20: Theme & Layout Settings JS
+    function applyPresetTheme(name, primary, secondary, bg, text) {
+      document.getElementById('theme-primary').value = primary;
+      document.getElementById('theme-primary-picker').value = primary;
+      document.getElementById('theme-secondary').value = secondary;
+      document.getElementById('theme-secondary-picker').value = secondary;
+      document.getElementById('theme-bg').value = bg;
+      document.getElementById('theme-bg-picker').value = bg;
+      document.getElementById('theme-text').value = text;
+      document.getElementById('theme-text-picker').value = text;
+      updateThemePreview();
+    }
+
+    function updateThemePreview() {
+      const primary = document.getElementById('theme-primary').value || '#10B981';
+      const secondary = document.getElementById('theme-secondary').value || '#F59E0B';
+      const bg = document.getElementById('theme-bg').value || '#0F172A';
+      const text = document.getElementById('theme-text').value || '#FFFFFF';
+
+      const card = document.getElementById('theme-preview-card');
+      const mosqueName = document.getElementById('prev-mosque-name');
+      const badge = document.getElementById('prev-badge');
+
+      if (card) {
+        card.style.background = bg;
+        card.style.borderColor = primary;
+        card.style.color = text;
+      }
+      if (mosqueName) mosqueName.style.color = primary;
+      if (badge) badge.style.background = primary;
+    }
+
+    async function loadThemeSettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/theme-settings');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const t = json.data;
+          document.getElementById('theme-primary').value = t.primary_color || '#10B981';
+          document.getElementById('theme-primary-picker').value = t.primary_color || '#10B981';
+          document.getElementById('theme-secondary').value = t.secondary_color || '#F59E0B';
+          document.getElementById('theme-secondary-picker').value = t.secondary_color || '#F59E0B';
+          document.getElementById('theme-bg').value = t.background_color || '#0F172A';
+          document.getElementById('theme-bg-picker').value = t.background_color || '#0F172A';
+          document.getElementById('theme-text').value = t.text_color || '#FFFFFF';
+          document.getElementById('theme-text-picker').value = t.text_color || '#FFFFFF';
+          if (t.layout_config && t.layout_config.mode) {
+            document.getElementById('theme-layout-mode').value = t.layout_config.mode;
+          }
+          updateThemePreview();
+        }
+      } catch (e) {
+        console.error('Failed to load theme settings:', e);
+      }
+    }
+
+    async function saveThemeSettings() {
+      const statusMsg = document.getElementById('theme-status-msg');
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        theme_name: 'Custom Theme',
+        primary_color: document.getElementById('theme-primary').value.trim() || '#10B981',
+        secondary_color: document.getElementById('theme-secondary').value.trim() || '#F59E0B',
+        background_color: document.getElementById('theme-bg').value.trim() || '#0F172A',
+        text_color: document.getElementById('theme-text').value.trim() || '#FFFFFF',
+        layout_config: { mode: document.getElementById('theme-layout-mode').value }
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/theme-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ Kustomisasi Tema & Layout berhasil disimpan dan disinkronkan ke InsForge!';
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+        } else {
+          statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan tema';
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan tema';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    function resetThemeSettings() {
+      applyPresetTheme('Modern Emerald Dark', '#10B981', '#F59E0B', '#0F172A', '#FFFFFF');
+      document.getElementById('theme-layout-mode').value = 'default';
+      saveThemeSettings();
+    }
+
+    // Section 29.19: Friday Settings JS
+    async function loadFridaySettings() {
+      try {
+        const res = await fetch(API_BASE + '/admin/friday-settings');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          const f = json.data;
+          document.getElementById('friday-enabled').value = f.is_enabled !== false ? 'true' : 'false';
+          document.getElementById('friday-disable-iqamah').value = f.disable_iqamah_on_friday !== false ? 'true' : 'false';
+          document.getElementById('friday-title').value = f.khutbah_title || 'SELAMAT MENUNAIKAN SHALAT JUM\'AT';
+          document.getElementById('friday-duration').value = f.khutbah_duration_minutes || 35;
+          document.getElementById('friday-message').value = f.khutbah_message || '';
+          document.getElementById('friday-khatib').value = f.khatib_name || '';
+          document.getElementById('friday-imam').value = f.imam_name || '';
+          document.getElementById('friday-theme').value = f.theme_title || '';
+        }
+      } catch (e) {
+        console.error('Failed to load Friday settings:', e);
+      }
+    }
+
+    async function saveFridaySettings() {
+      const statusMsg = document.getElementById('friday-status-msg');
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        is_enabled: document.getElementById('friday-enabled').value === 'true',
+        disable_iqamah_on_friday: document.getElementById('friday-disable-iqamah').value === 'true',
+        khutbah_title: document.getElementById('friday-title').value.trim() || 'SELAMAT MENUNAIKAN SHALAT JUM\'AT',
+        khutbah_duration_minutes: parseInt(document.getElementById('friday-duration').value, 10) || 35,
+        khutbah_message: document.getElementById('friday-message').value.trim(),
+        khatib_name: document.getElementById('friday-khatib').value.trim(),
+        imam_name: document.getElementById('friday-imam').value.trim(),
+        theme_title: document.getElementById('friday-theme').value.trim()
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/friday-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ Pengaturan Mode Jum\'at berhasil disimpan dan disinkronkan ke InsForge!';
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+        } else {
+          statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan Jum\'at';
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menyimpan pengaturan Jum\'at';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    // Section 29.18: Agendas & Islamic Events JS
+    async function loadAgendas() {
+      try {
+        const res = await fetch(API_BASE + '/admin/agendas');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          renderAgendasTable(json.data);
+        }
+      } catch (e) {
+        console.error('Failed to load agendas:', e);
+      }
+    }
+
+    function renderAgendasTable(list) {
+      const tbody = document.getElementById('agendas-list-tbody');
+      if (!tbody) return;
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Belum ada data agenda masjid.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => `
+        <tr>
+          <td>#${item.id}</td>
+          <td><b>${escapeHtml(item.title)}</b></td>
+          <td style="max-width:300px; word-wrap:break-word;">${escapeHtml(item.description || '-')}</td>
+          <td><small>${item.starts_at ? new Date(item.starts_at).toLocaleString('id-ID') : '-'}</small></td>
+          <td>
+            <span class="badge ${item.is_active ? 'badge-success' : 'badge-danger'}">
+              ${item.is_active ? '● Aktif' : '○ Nonaktif'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px; margin-right:4px;" onclick="toggleAgenda(${item.id}, ${!item.is_active})">
+              ${item.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            </button>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:12px; background:#EF4444; color:#fff;" onclick="deleteAgenda(${item.id})">
+              Hapus
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addAgenda() {
+      const statusMsg = document.getElementById('agenda-status-msg');
+      statusMsg.style.display = 'none';
+
+      const title = document.getElementById('agenda-title').value.trim();
+      const description = document.getElementById('agenda-desc').value.trim();
+      const starts_at = document.getElementById('agenda-starts-at').value;
+      const ends_at = document.getElementById('agenda-ends-at').value;
+      const is_active = document.getElementById('agenda-status').value === 'true';
+
+      if (!title) {
+        alert('Judul agenda tidak boleh kosong!');
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/admin/agendas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description,
+            starts_at: starts_at ? new Date(starts_at).toISOString() : null,
+            ends_at: ends_at ? new Date(ends_at).toISOString() : null,
+            is_active
+          })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ Agenda masjid berhasil ditambahkan dan disinkronkan ke InsForge!';
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+          document.getElementById('agenda-title').value = '';
+          document.getElementById('agenda-desc').value = '';
+          document.getElementById('agenda-starts-at').value = '';
+          document.getElementById('agenda-ends-at').value = '';
+          loadAgendas();
+        } else {
+          statusMsg.innerText = '⚠️ Gagal menambahkan agenda';
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menambahkan agenda';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    async function toggleAgenda(id, newStatus) {
+      try {
+        const res = await fetch(API_BASE + '/admin/agendas/toggle', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_active: newStatus })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadAgendas();
+        }
+      } catch (e) {
+        console.error('Failed to toggle agenda:', e);
+      }
+    }
+
+    async function deleteAgenda(id) {
+      if (!confirm('Apakah Anda yakin ingin menghapus agenda ini?')) return;
+      try {
+        const res = await fetch(API_BASE + '/admin/agendas', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadAgendas();
+        }
+      } catch (e) {
+        console.error('Failed to delete agenda:', e);
+      }
+    }
+
+    async function loadMonthlySchedule() {
+      try {
+        const res = await fetch(API_BASE + '/admin/jadwal');
+        const json = await res.json();
+        if (json.status === 'success' && json.data && json.data.schedules) {
+          renderScheduleTable(json.data.schedules);
+        }
+      } catch (e) {
+        console.error('Failed to load monthly schedule:', e);
+      }
+    }
+
+    let currentTableHeaders = ["Hari / Tanggal", "Petugas Khutbah / Imam", "Tema Khutbah"];
+    let currentTableRows = [
+      ["Jum'at Ke-1", "Ust. Dr. H. Ahmad Fauzi, Lc", "Keutamaan Shalat Berjama'ah"],
+      ["Jum'at Ke-2", "Ust. M. Ridwan, Lc", "Pentingnya Sedekah Subuh"],
+      ["Jum'at Ke-3", "Ust. Syahrul Ramadhan, MA", "Adab Berada di Masjid"],
+      ["Jum'at Ke-4", "Ust. H. Amirullah, S.Ag", "Menjaga Silaturahmi Sesama Muslim"]
+    ];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderTableBuilder() {
+      const thead = document.getElementById('table-builder-thead');
+      const tbody = document.getElementById('table-builder-tbody');
+      if (!thead || !tbody) return;
+
+      thead.innerHTML = '<tr>' + currentTableHeaders.map((h, colIdx) => `
+        <th><input type="text" value="${escapeHtml(h)}" oninput="currentTableHeaders[${colIdx}]=this.value" style="background:#0F172A; color:#38BDF8; border:1px solid #334155; padding:6px 10px; border-radius:4px; font-weight:bold; width:100%; box-sizing:border-box;"></th>
+      `).join('') + '</tr>';
+
+      tbody.innerHTML = currentTableRows.map((row, rowIdx) => `
+        <tr>` + row.map((cell, colIdx) => `
+          <td><input type="text" value="${escapeHtml(cell)}" oninput="currentTableRows[${rowIdx}][${colIdx}]=this.value" style="background:#1E293B; color:#F8FAFC; border:1px solid #334155; padding:6px 10px; border-radius:4px; width:100%; box-sizing:border-box;"></td>
+        `).join('') + `</tr>
+      `).join('');
+    }
+
+    function addTableColumn() {
+      currentTableHeaders.push(`Kolom ${currentTableHeaders.length + 1}`);
+      currentTableRows.forEach(r => r.push(''));
+      renderTableBuilder();
+    }
+
+    function removeTableColumn() {
+      if (currentTableHeaders.length <= 1) return;
+      currentTableHeaders.pop();
+      currentTableRows.forEach(r => r.pop());
+      renderTableBuilder();
+    }
+
+    function addTableRow() {
+      currentTableRows.push(new Array(currentTableHeaders.length).fill(''));
+      renderTableBuilder();
+    }
+
+    function removeTableRow() {
+      if (currentTableRows.length <= 1) return;
+      currentTableRows.pop();
+      renderTableBuilder();
+    }
+
+    function loadTablePreset(type) {
+      if (type === 'khutbah') {
+        document.getElementById('media-title').value = 'JADWAL KHATIB & IMAM JUM\'AT';
+        document.getElementById('media-subtitle').value = 'Bulan Ini - Masjid Al-Hidayah Siteba';
+        currentTableHeaders = ["Hari / Tanggal", "Petugas Khutbah", "Tema Khutbah"];
+        currentTableRows = [
+          ["Jum'at Ke-1", "Ust. Dr. H. Ahmad Fauzi, Lc", "Keutamaan Shalat Berjama'ah"],
+          ["Jum'at Ke-2", "Ust. M. Ridwan, Lc", "Pentingnya Sedekah Subuh"],
+          ["Jum'at Ke-3", "Ust. Syahrul Ramadhan, MA", "Adab Berada di Masjid"],
+          ["Jum'at Ke-4", "Ust. H. Amirullah, S.Ag", "Menjaga Silaturahmi Sesama Muslim"]
+        ];
+      } else if (type === 'kas') {
+        document.getElementById('media-title').value = 'LAPORAN REKAPITULASI KAS MASJID';
+        document.getElementById('media-subtitle').value = 'Periode Pekan Ini';
+        currentTableHeaders = ["Keterangan Rincian Kas", "Jumlah (Rp)"];
+        currentTableRows = [
+          ["Saldo Kas Awal", "Rp 15.500.000"],
+          ["Infaq & Sedekah Jum'at", "Rp 4.250.000"],
+          ["Infaq Kotak Keliling", "Rp 1.800.000"],
+          ["Pengeluaran Operasional & Kebersihan", "Rp 2.100.000"],
+          ["Saldo Kas Akhir", "Rp 19.450.000"]
+        ];
+      }
+      renderTableBuilder();
+    }
+
+
+    function toggleMediaTypeFields() {
+      const type = document.getElementById('media-type').value;
+      const label = document.getElementById('media-url-label');
+      const input = document.getElementById('media-url');
+      const arabicGroup = document.getElementById('media-arabic-group');
+      const subtitleGroup = document.getElementById('media-subtitle-group');
+      const contentGroup = document.getElementById('media-content-group');
+
+      const tableBuilderGroup = document.getElementById('media-table-builder-group');
+
+      if (arabicGroup) {
+        arabicGroup.style.display = type === 'hadith' ? 'block' : 'none';
+      }
+      if (subtitleGroup) {
+        subtitleGroup.style.display = 'block';
+      }
+      if (contentGroup) {
+        contentGroup.style.display = 'block';
+      }
+
+      if (tableBuilderGroup) {
+        const isTable = (type === 'infoTable' || type === 'kasTable');
+        tableBuilderGroup.style.display = isTable ? 'block' : 'none';
+        if (isTable) {
+          renderTableBuilder();
+        }
+      }
+
+      if (type === 'image') {
+        label.innerText = 'URL Gambar / Poster (JPG / PNG / WebP)';
+        input.placeholder = 'Upload poster ke InsForge atau masukkan URL gambar...';
+      } else if (type === 'video') {
+        label.innerText = 'URL File Video (MP4 / WebM)';
+        input.placeholder = 'Upload video ke InsForge atau masukkan URL MP4...';
+      } else if (type === 'youtube' || type === 'livestream') {
+        label.innerText = type === 'livestream' ? 'URL YouTube Livestream' : 'URL / Embed Link Video YouTube';
+        input.placeholder = type === 'livestream' ? 'https://www.youtube.com/live/...' : 'https://www.youtube.com/watch?v=...';
+      } else {
+        label.innerText = 'File / URL Media Tambahan (Opsional)';
+        input.placeholder = 'URL media tambahan (opsional)...';
+      }
+    }
+
+    async function loadMediaSlides() {
+      try {
+        const res = await fetch(API_BASE + '/admin/media-items');
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          renderMediaTable(json.data);
+        }
+      } catch (e) {
+        console.error('Failed to load media items:', e);
+      }
+    }
+
+    function renderMediaTable(items) {
+      const tbody = document.getElementById('media-tbody');
+      if (!tbody) return;
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">Belum ada konten multimedia. Silakan tambah slide baru di atas.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map(m => `
+        <tr>
+          <td><b>#${m.id}</b></td>
+          <td><span style="background:#1E293B; color:#38BDF8; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:11px; text-transform:uppercase;">${m.type}</span></td>
+          <td>
+            <b>${m.title}</b>
+            ${m.url ? `<br><a href="${m.url}" target="_blank" style="color:var(--accent-gold); font-size:12px;">🔗 Lihat Media</a>` : ''}
+          </td>
+          <td><b>${m.duration_seconds || 10}s</b></td>
+          <td>
+            <span style="color:${m.is_active ? 'var(--accent-emerald)' : '#EF4444'}; font-weight:bold;">
+              ${m.is_active ? '● AKTIF' : '○ NONAKTIF'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px;" onclick="toggleMediaSlide(${m.id}, ${!m.is_active})">
+              ${m.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            </button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px; background:#7F1D1D; color:#FCA5A5; margin-left:4px;" onclick="deleteMediaSlide(${m.id})">
+              Hapus
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addMediaSlide() {
+      const statusMsg = document.getElementById('media-status-msg');
+      statusMsg.style.display = 'none';
+
+      const title = document.getElementById('media-title').value.trim();
+      if (!title) {
+        alert('Judul konten multimedia wajib diisi!');
+        return;
+      }
+
+      const mediaType = document.getElementById('media-type').value;
+      let contentVal = document.getElementById('media-content').value.trim();
+
+      if (mediaType === 'infoTable' || mediaType === 'kasTable') {
+        const tableObj = {
+          headers: currentTableHeaders,
+          rows: currentTableRows
+        };
+        contentVal = JSON.stringify(tableObj);
+      }
+
+      const payload = {
+        title: title,
+        subtitle: document.getElementById('media-subtitle').value.trim(),
+        content: contentVal,
+        arabic_text: document.getElementById('media-arabic-text') ? document.getElementById('media-arabic-text').value.trim() : '',
+        type: mediaType,
+        url: document.getElementById('media-url').value.trim() || null,
+        duration_seconds: parseInt(document.getElementById('media-duration').value, 10) || 10,
+        is_active: true
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/admin/media-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          statusMsg.innerText = '✓ ' + json.message;
+          statusMsg.style.color = 'var(--accent-emerald)';
+          statusMsg.style.display = 'block';
+          document.getElementById('media-title').value = '';
+          document.getElementById('media-subtitle').value = '';
+          document.getElementById('media-content').value = '';
+          if (document.getElementById('media-arabic-text')) document.getElementById('media-arabic-text').value = '';
+          document.getElementById('media-url').value = '';
+          loadMediaSlides();
+        } else {
+          statusMsg.innerText = '⚠️ ' + (json.message || 'Gagal menambahkan media');
+          statusMsg.style.color = '#EF4444';
+          statusMsg.style.display = 'block';
+        }
+      } catch (e) {
+        statusMsg.innerText = '⚠️ Gagal menambahkan media';
+        statusMsg.style.color = '#EF4444';
+        statusMsg.style.display = 'block';
+      }
+    }
+
+    async function toggleMediaSlide(id, newStatus) {
+      try {
+        const res = await fetch(API_BASE + '/admin/media-items/toggle', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_active: newStatus })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadMediaSlides();
+        }
+      } catch (e) {
+        console.error('Failed to toggle media item:', e);
+      }
+    }
+
+    async function deleteMediaSlide(id) {
+      if (!confirm('Apakah Anda yakin ingin menghapus slide media ini?')) return;
+      try {
+        const res = await fetch(API_BASE + '/admin/media-items', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          loadMediaSlides();
+        }
+      } catch (e) {
+        console.error('Failed to delete media item:', e);
+      }
+    }
+
+    if (authToken) {
+      loadAllAdminData();
+    }
+  </script>
+</body>
+</html>

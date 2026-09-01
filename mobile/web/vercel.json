@@ -1,0 +1,11 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/admin/", "permanent": false }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://2a5hq4xh.ap-southeast.insforge.app/functions/masjid-backend?route=/api/:path*"
+    }
+  ]
+}

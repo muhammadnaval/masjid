@@ -1,0 +1,2938 @@
+# PRD — Aplikasi Jam Digital Masjid untuk Antigravity
+
+## 1. Ringkasan Produk
+
+**Nama produk:** Masjid Display  
+**Jenis produk:** Aplikasi web jam digital masjid untuk layar TV  
+**Tujuan utama:** Menampilkan jadwal sholat akurat, pengingat adzan dan iqamah, tanggal Masehi/Hijriyah, pengumuman multimedia, running text, QR donasi, serta konten dakwah pada layar TV masjid.
+
+Aplikasi ini dirancang untuk digunakan oleh pengurus masjid melalui dashboard admin dan ditampilkan kepada jama'ah melalui layar TV dalam mode fullscreen.
+
+---
+
+## 2. Informasi Teknis Proyek
+
+| Komponen | Teknologi / Nilai |
+|---|---|
+| Backend | InsForge |
+| Frontend display | Flutter APK Android |
+| Dashboard admin | Web SPA yang dilayani backend |
+| UI display | Flutter SDK + Dart |
+| Database | PostgreSQL bawaan InsForge |
+| Storage | InsForge Storage |
+| API jadwal shalat | eQuran.id API Shalat |
+| Endpoint lokal backend | http://localhost:8095 |
+| Endpoint lokal Flutter Web untuk pengembangan | http://localhost:8080 |
+| Domain produksi | https://masjid.alihdayahsiteba.web.id |
+| Folder proyek lokal | /home/naval/www/masjid.test/mobile |
+| Bahasa antarmuka | Bahasa Indonesia |
+| Zona waktu | Asia/Jakarta |
+
+---
+
+## 2.1 Arsitektur Baru
+
+Aplikasi menggunakan arsitektur **backend Insforge + frontend Flutter APK**. Insforge berperan sebagai backend, autentikasi, database PostgreSQL, storage, API, upload konten, dan pusat data aplikasi. Flutter berperan sebagai aplikasi display Android yang di-install pada Android TV, Android Box, tablet Android, atau perangkat display lain yang mendukung APK.
+
+### Backend Insforge
+- Menyediakan dashboard admin berbasis web.
+- Menyediakan API untuk aplikasi Flutter.
+- Mengelola database PostgreSQL bawaan Insforge.
+- Mengelola upload media, audio, QR donasi, tema, jadwal, dan pengaturan.
+- Menjalankan scheduler untuk sinkronisasi jadwal sholat.
+
+### Frontend Flutter APK
+- Dibangun menggunakan Flutter dan Dart.
+- Output utama berupa file APK Android.
+- Dipasang pada Android TV / Android Box / tablet.
+- Menampilkan jam digital, jadwal sholat, adzan, iqamah, slide, video, audio, QR donasi, dan running text.
+- Mengambil data dari backend Insforge melalui API.
+- Menyimpan cache lokal agar display tetap berjalan ketika koneksi internet/backend sementara tidak tersedia.
+
+---
+
+## 3. Latar Belakang
+
+Masjid membutuhkan media informasi digital yang jelas, akurat, dan mudah dikelola. Layar TV masjid dapat digunakan untuk menampilkan jadwal sholat, pengingat adzan, hitung mundur iqamah, agenda masjid, poster kajian, informasi donasi, dokumentasi kegiatan, video dakwah, dan running text.
+
+Aplikasi ini dibuat agar pengurus masjid dapat mengatur seluruh informasi tersebut dari dashboard admin tanpa perlu mengubah kode secara manual.
+
+---
+
+## 4. Tujuan Produk
+
+1. Menampilkan jadwal sholat seluruh kota/kabupaten di Indonesia berdasarkan API jadwal shalat eQuran.id.
+2. Menampilkan jam digital besar dan mudah dibaca dari jarak jauh.
+3. Menampilkan layar khusus saat masuk waktu adzan.
+4. Memutar audio adzan/alarm secara otomatis saat waktu sholat tiba.
+5. Menampilkan countdown iqamah dengan durasi berbeda untuk setiap waktu sholat.
+6. Menampilkan pengingat syuruq.
+7. Menampilkan tanggal Masehi dan Hijriyah dengan koreksi manual.
+8. Memutar murottal sebelum adzan pada waktu tertentu.
+9. Memutar dzikir pagi dan petang secara otomatis.
+10. Menampilkan pengumuman multimedia berupa gambar, video, YouTube, livestream, ayat, hadits, tabel informasi, dan QR donasi.
+11. Menyediakan fitur kustomisasi desain sesuai identitas masjid.
+12. Menyediakan mode khusus shalat Jum'at.
+
+---
+
+## 5. Target Pengguna
+
+### 5.1 Admin / Pengurus Masjid
+
+Pengguna yang mengelola data dan konfigurasi aplikasi.
+
+Kebutuhan:
+- Mengatur profil masjid.
+- Memilih kota/kabupaten jadwal sholat.
+- Mengatur koreksi waktu sholat.
+- Mengatur durasi iqamah.
+- Mengupload logo, background, poster, video, audio, dan QR donasi.
+- Mengatur running text.
+- Mengatur desain tampilan.
+- Mengatur mode Jum'at.
+
+### 5.2 Jama'ah Masjid
+
+Pengguna pasif yang melihat informasi pada layar TV.
+
+Kebutuhan:
+- Melihat jam dan jadwal sholat dengan jelas.
+- Mengetahui waktu adzan dan iqamah.
+- Melihat pengumuman, agenda, poster, dan informasi donasi.
+
+---
+
+## 6. Ruang Lingkup Produk
+
+### 6.1 Termasuk dalam Scope
+
+- Dashboard admin.
+- Display fullscreen untuk TV.
+- Manajemen profil masjid.
+- Jadwal sholat resmi eQuran.id.
+- Koreksi manual waktu sholat.
+- Tanggal Masehi dan Hijriyah.
+- Layar adzan.
+- Countdown iqamah.
+- Pengingat syuruq.
+- Murottal otomatis sebelum adzan.
+- Audio dzikir pagi dan petang.
+- Slide gambar dan video.
+- Video YouTube.
+- Livestream.
+- Konten ayat, hadits, poster, dan dokumentasi kegiatan.
+- Tabel informasi.
+- QR donasi.
+- Running text.
+- Notifikasi agenda dan hari besar Islam.
+- Kustomisasi tema, warna, layout, dan logo.
+- Mode khusus shalat Jum'at.
+
+### 6.2 Tidak Termasuk dalam Versi Awal
+
+- Multi-masjid dalam satu instalasi.
+- Aplikasi mobile native.
+- Integrasi pembayaran donasi langsung.
+- Sinkronisasi cloud antar perangkat.
+- Remote device management untuk banyak TV.
+- Sistem multi-role kompleks.
+
+---
+
+## 7. Fitur Produk
+
+## 7.1 Dashboard Admin
+
+### Deskripsi
+Dashboard digunakan untuk mengelola seluruh data dan konfigurasi aplikasi.
+
+### Fitur
+- Login admin.
+- Ringkasan status display.
+- Pengaturan profil masjid.
+- Pengaturan jadwal sholat.
+- Pengaturan koreksi waktu.
+- Pengaturan iqamah.
+- Pengaturan audio.
+- Pengaturan konten multimedia.
+- Pengaturan running text.
+- Pengaturan QR donasi.
+- Pengaturan agenda.
+- Pengaturan desain.
+
+### Acceptance Criteria
+- Admin dapat login menggunakan email dan password.
+- Admin dapat menyimpan perubahan konfigurasi.
+- Perubahan tampil pada display.
+- Semua UI admin menggunakan Bahasa Indonesia.
+
+---
+
+## 7.2 Profil Masjid
+
+### Deskripsi
+Admin dapat mengatur identitas masjid yang tampil pada layar utama.
+
+### Data
+- Nama masjid.
+- Alamat.
+- Kontak.
+- Logo.
+- Background.
+- Zona waktu.
+
+### Acceptance Criteria
+- Admin dapat mengupload logo masjid.
+- Admin dapat mengubah nama, alamat, dan kontak.
+- Data profil tampil di layar utama.
+
+---
+
+## 7.3 Jadwal Sholat Seluruh Indonesia
+
+### Deskripsi
+Aplikasi menampilkan jadwal sholat berdasarkan kota/kabupaten di Indonesia dengan sumber eQuran.id.
+
+### Waktu yang Ditampilkan
+- Imsak, opsional.
+- Subuh.
+- Syuruq.
+- Dzuhur.
+- Jum'at, khusus hari Jumat.
+- Ashar.
+- Maghrib.
+- Isya.
+
+### Kebutuhan
+- Admin dapat memilih provinsi.
+- Admin dapat memilih kota/kabupaten.
+- Sistem mengambil API jadwal shalat eQuran.id.
+- Jadwal disimpan/cache ke database.
+- Jika koneksi gagal, sistem tetap menggunakan jadwal dari cache.
+
+### Acceptance Criteria
+- Jadwal tampil sesuai kota/kabupaten aktif.
+- Jadwal otomatis berganti setiap hari.
+- Hari Jumat menampilkan label Jum'at.
+- Jadwal tetap tampil meskipun API eksternal gagal.
+
+---
+
+## 7.4 Koreksi Manual Waktu Sholat
+
+### Deskripsi
+Admin dapat menambah atau mengurangi menit pada setiap waktu sholat agar sesuai kebiasaan setempat.
+
+### Contoh
+- Subuh +2 menit.
+- Dzuhur -1 menit.
+- Maghrib +3 menit.
+
+### Acceptance Criteria
+- Admin dapat mengatur koreksi setiap waktu sholat.
+- Nilai koreksi dapat minus, nol, atau plus.
+- Display menampilkan waktu setelah koreksi.
+
+---
+
+## 7.5 Layar Utama Jam Digital
+
+### Deskripsi
+Layar utama adalah tampilan fullscreen untuk TV masjid.
+
+### Elemen Tampilan
+- Logo masjid.
+- Nama masjid.
+- Alamat/kontak.
+- Background visual.
+- Jam digital real-time.
+- Hari dan tanggal Masehi.
+- Tanggal Hijriyah.
+- Jadwal sholat.
+- Highlight waktu sholat berikutnya.
+- Countdown menuju waktu sholat berikutnya.
+- Running text.
+- Slide/konten multimedia.
+- QR donasi jika aktif.
+
+### Acceptance Criteria
+- Layar dapat dibuka melalui URL display.
+- Tampilan otomatis mengikuti ukuran layar TV.
+- Jam berjalan real-time.
+- Teks utama mudah dibaca dari jauh.
+- Running text tampil di bagian bawah layar.
+
+---
+
+## 7.6 Layar Adzan
+
+### Deskripsi
+Saat masuk waktu sholat, sistem menampilkan layar khusus adzan dan memutar audio adzan/alarm.
+
+### Pengaturan
+- Aktif/nonaktif per waktu sholat.
+- Pilihan audio adzan/alarm.
+- Durasi layar adzan.
+- Volume audio.
+
+### Acceptance Criteria
+- Layar adzan tampil otomatis saat waktu sholat tiba.
+- Audio diputar otomatis.
+- Setelah durasi selesai, sistem berpindah ke countdown iqamah jika aktif.
+
+---
+
+## 7.7 Countdown Iqamah
+
+### Deskripsi
+Setelah adzan, sistem menampilkan hitung mundur menuju iqamah.
+
+### Pengaturan
+- Aktif/nonaktif per waktu sholat.
+- Durasi countdown per waktu sholat.
+- Mode khusus Jum'at untuk menonaktifkan iqamah.
+
+### Acceptance Criteria
+- Countdown tampil setelah layar adzan.
+- Durasi dapat berbeda untuk tiap waktu sholat.
+- Admin dapat menonaktifkan iqamah pada waktu tertentu.
+
+---
+
+## 7.8 Pengingat Syuruq
+
+### Deskripsi
+Sistem menampilkan layar pengingat syuruq untuk mengingatkan jama'ah tentang waktu terlarang untuk sholat.
+
+### Acceptance Criteria
+- Admin dapat mengaktifkan/menonaktifkan pengingat syuruq.
+- Admin dapat mengatur durasi pengingat.
+- Pesan pengingat tampil jelas.
+
+---
+
+## 7.9 Tanggal Masehi dan Hijriyah
+
+### Deskripsi
+Layar utama menampilkan tanggal Masehi dan Hijriyah.
+
+### Kebutuhan
+- Tanggal Masehi mengikuti sistem dan zona waktu Asia/Jakarta.
+- Tanggal Hijriyah dihitung otomatis.
+- Admin dapat mengoreksi tanggal Hijriyah plus/minus hari.
+
+### Acceptance Criteria
+- Tanggal Masehi tampil benar.
+- Tanggal Hijriyah tampil pada layar utama.
+- Koreksi Hijriyah langsung memengaruhi tanggal yang tampil.
+
+---
+
+## 7.10 Murottal Otomatis Sebelum Adzan
+
+### Deskripsi
+Aplikasi dapat memutar murottal Al-Qur'an beberapa menit sebelum adzan pada waktu tertentu.
+
+### Contoh
+- Putar Surah Al-Kahfi 5 menit sebelum Maghrib.
+- Putar murottal 10 menit sebelum Subuh.
+
+### Pengaturan
+- Aktif/nonaktif per waktu sholat.
+- File audio.
+- Waktu mulai sebelum adzan.
+- Durasi maksimal.
+- Volume.
+
+### Acceptance Criteria
+- Audio murottal diputar otomatis sebelum waktu sholat.
+- Audio berhenti saat masuk layar adzan.
+- Admin dapat mengatur waktu dan audio per sholat.
+
+---
+
+## 7.11 Audio Dzikir Pagi dan Petang
+
+### Deskripsi
+Aplikasi dapat memutar dzikir pagi setelah Subuh dan dzikir petang setelah Ashar.
+
+### Acceptance Criteria
+- Dzikir pagi dapat diputar otomatis setelah Subuh.
+- Dzikir petang dapat diputar otomatis setelah Ashar.
+- Admin dapat mengaktifkan atau menonaktifkan masing-masing audio.
+
+---
+
+## 7.12 Slide Gambar dan Video Fullscreen
+
+### Deskripsi
+Aplikasi dapat menampilkan slide gambar dan video secara fullscreen atau sebagai bagian dari layar utama.
+
+### Jenis Konten
+- JPG.
+- PNG.
+- WebP.
+- MP4.
+- WebM.
+- Poster kajian.
+- Dokumentasi kegiatan.
+- Infografis.
+
+### Acceptance Criteria
+- Admin dapat mengupload gambar dan video.
+- Admin dapat mengatur urutan dan durasi slide.
+- Slide berhenti sementara saat adzan/iqamah.
+- Slide kembali berjalan setelah selesai.
+
+---
+
+## 7.13 Video YouTube
+
+### Deskripsi
+Aplikasi dapat menampilkan video YouTube otomatis bergantian dengan slide lain.
+
+### Acceptance Criteria
+- Admin dapat menambahkan URL YouTube.
+- Video tampil di display.
+- Video tidak tampil saat adzan/iqamah.
+
+---
+
+## 7.14 Livestream Video
+
+### Deskripsi
+Aplikasi dapat menampilkan livestream, misalnya live Makkah, Madinah, atau kegiatan masjid.
+
+### Acceptance Criteria
+- Admin dapat menambahkan URL livestream.
+- Livestream masuk dalam rotasi slide.
+- Livestream berhenti sementara saat adzan/iqamah.
+
+---
+
+## 7.15 Konten Ayat, Hadits, dan Teks Dakwah
+
+### Deskripsi
+Admin dapat membuat konten teks seperti ayat Qur'an, hadits, doa, dan pesan dakwah.
+
+### Data
+- Judul.
+- Isi teks Arab/latin/terjemahan.
+- Sumber.
+- Durasi tampil.
+- Status aktif.
+
+### Acceptance Criteria
+- Konten teks dapat dibuat dari dashboard.
+- Konten tampil sebagai slide.
+- Teks mudah dibaca dari jauh.
+
+---
+
+## 7.16 Tabel Informasi
+
+### Deskripsi
+Aplikasi dapat menampilkan informasi berbasis tabel.
+
+### Contoh
+- Kas keuangan masjid.
+- Jadwal khutbah Jumat.
+- Jadwal imam.
+- Jadwal muadzin.
+- Jadwal kajian.
+
+### Acceptance Criteria
+- Admin dapat membuat tabel.
+- Admin dapat menambah baris dan kolom.
+- Tabel tampil sebagai slide.
+- Tabel mudah dibaca di layar TV.
+
+---
+
+## 7.17 QR Donasi
+
+### Deskripsi
+Aplikasi menampilkan QR code donasi agar jama'ah dapat berdonasi dengan scan QR.
+
+### Data
+- Nama program donasi.
+- Deskripsi.
+- Gambar QR code.
+- Nama akun/rekening/e-wallet.
+- Status aktif.
+
+### Acceptance Criteria
+- Admin dapat mengupload QR code.
+- QR code tampil di layar utama atau slide.
+- QR code cukup besar untuk dipindai.
+
+---
+
+## 7.18 Running Text
+
+### Deskripsi
+Running text menampilkan informasi penting di bagian bawah layar.
+
+### Contoh
+- Pengumuman kajian.
+- Agenda masjid.
+- Pengingat mematikan HP.
+- Informasi donasi.
+- Informasi hari besar Islam.
+
+### Pengaturan
+- Isi teks.
+- Kecepatan animasi.
+- Warna teks.
+- Warna background.
+- Jadwal tampil.
+- Status aktif.
+
+### Acceptance Criteria
+- Running text berjalan di bawah layar.
+- Admin dapat mengubah isi running text.
+- Teks mudah dibaca.
+
+---
+
+## 7.19 Notifikasi Agenda dan Hari Besar Islam
+
+### Deskripsi
+Aplikasi menampilkan notifikasi agenda masjid dan hari besar Islam terdekat.
+
+### Acceptance Criteria
+- Admin dapat membuat agenda.
+- Agenda memiliki tanggal dan waktu.
+- Notifikasi tampil pada layar utama.
+
+---
+
+## 7.20 Mode Shalat Jum'at
+
+### Deskripsi
+Mode khusus untuk masjid yang menyelenggarakan shalat Jum'at.
+
+### Perilaku
+- Dzuhur berubah menjadi Jum'at pada hari Jumat.
+- Reminder iqamah dapat dinonaktifkan.
+- Setelah adzan Jum'at, layar dapat menampilkan slide khusus khutbah.
+
+### Acceptance Criteria
+- Admin dapat mengaktifkan mode Jum'at.
+- Admin dapat menonaktifkan iqamah khusus Jum'at.
+- Slide khutbah tampil saat mode Jum'at aktif.
+
+---
+
+## 7.21 Kustomisasi Desain
+
+### Deskripsi
+Admin dapat mengubah desain tampilan jam sholat sesuai identitas masjid.
+
+### Pengaturan
+- Tema warna.
+- Background.
+- Logo.
+- Ukuran font.
+- Layout.
+- Posisi elemen.
+- Warna teks.
+- Warna kartu jadwal.
+- Efek transisi.
+- Pilihan layout dan konfigurasi widget Flutter.
+
+### Acceptance Criteria
+- Admin dapat memilih tema.
+- Admin dapat mengganti warna dan background.
+- Display tetap responsif di layar TV.
+- Elemen utama tetap mudah dibaca.
+
+---
+
+## 8. Halaman Aplikasi
+
+## 8.1 Layar Aplikasi Flutter
+
+Aplikasi Flutter memakai satu shell fullscreen dan mengganti mode melalui state engine, bukan route web terpisah.
+
+- `main`: jam, profil, jadwal sholat, countdown, running text, dan media.
+- `adzan`: layar adzan dan audio.
+- `iqamah`: countdown iqamah.
+- `syuruq`: pengingat syuruq.
+- `friday_khutbah`: pesan atau konten khutbah Jum'at.
+- `media_fullscreen`: konten multimedia fullscreen.
+
+State awal dan pembaruan berkala diambil dari `GET /api/v1/display/state`.
+
+---
+
+## 8.2 Dashboard Admin Web
+
+Dashboard admin berupa Web SPA. Login dan modul pengaturan tampil sebagai layar/tab dalam satu aplikasi admin; route terpisah tidak diwajibkan.
+
+- Login admin.
+- Ringkasan dashboard.
+- Profil dan media identitas masjid.
+- Lokasi, sinkronisasi, dan koreksi jadwal sholat.
+- Pengaturan iqamah, audio, dan mode Jum'at.
+- Konten multimedia, tabel informasi, agenda, dan running text.
+- QR donasi.
+- Tema, layout, dan pengaturan umum.
+
+---
+
+## 9. Struktur Data Awal
+
+## 9.1 mosque_profiles
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| name | varchar | Nama masjid |
+| address | text | Alamat |
+| contact | varchar nullable | Kontak |
+| logo_path | varchar nullable | Path logo |
+| background_path | varchar nullable | Path background |
+| timezone | varchar | Default Asia/Jakarta |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.2 prayer_locations
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| province_name | varchar | Nama provinsi |
+| city_code | varchar | Kode kota/kabupaten eQuran.id |
+| city_name | varchar | Nama kota/kabupaten |
+| is_active | boolean | Lokasi aktif |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.3 prayer_schedules
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| date | date | Tanggal |
+| imsak | time nullable | Imsak |
+| subuh | time | Subuh |
+| syuruq | time | Syuruq |
+| dzuhur | time | Dzuhur |
+| ashar | time | Ashar |
+| maghrib | time | Maghrib |
+| isya | time | Isya |
+| source | varchar | Sumber jadwal |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.4 prayer_time_corrections
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| prayer_name | varchar | Nama waktu sholat |
+| correction_minutes | integer | Koreksi menit |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.5 iqamah_settings
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| prayer_name | varchar | Nama waktu sholat |
+| is_enabled | boolean | Status aktif |
+| duration_minutes | integer | Durasi countdown |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.6 media_items
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| title | varchar | Judul |
+| type | enum | image, video, youtube, livestream, text, table, donation |
+| content | longtext nullable | Isi teks/URL/embed |
+| file_path | varchar nullable | File upload |
+| duration_seconds | integer | Durasi tampil |
+| sort_order | integer | Urutan |
+| is_active | boolean | Status |
+| starts_at | datetime nullable | Jadwal mulai |
+| ends_at | datetime nullable | Jadwal selesai |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.7 running_texts
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| text | text | Isi running text |
+| speed | integer | Kecepatan |
+| is_active | boolean | Status |
+| starts_at | datetime nullable | Jadwal mulai |
+| ends_at | datetime nullable | Jadwal selesai |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.8 audio_settings
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| type | enum | adzan, murottal, dzikir_pagi, dzikir_petang |
+| prayer_name | varchar nullable | Waktu sholat terkait |
+| file_path | varchar nullable | File audio |
+| source_url | varchar nullable | URL audio |
+| play_before_minutes | integer nullable | Untuk murottal |
+| play_after_minutes | integer nullable | Untuk dzikir |
+| volume | integer | 0-100 |
+| is_enabled | boolean | Status |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.9 donation_settings
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| title | varchar | Judul donasi |
+| description | text nullable | Deskripsi |
+| qr_code_path | varchar | Path QR code |
+| account_name | varchar nullable | Nama akun/rekening |
+| is_active | boolean | Status |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+## 9.10 theme_settings
+
+| Field | Type | Keterangan |
+|---|---|---|
+| id | bigint | Primary key |
+| theme_name | varchar | Nama tema |
+| primary_color | varchar | Warna utama |
+| secondary_color | varchar | Warna sekunder |
+| background_color | varchar | Warna background |
+| text_color | varchar | Warna teks |
+| layout_config | json | Konfigurasi layout |
+| widget_config | json nullable | Konfigurasi widget Flutter yang tervalidasi |
+| is_active | boolean | Status |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+
+---
+
+## 10. Prioritas Tampilan Display
+
+Sistem display harus mengikuti prioritas berikut:
+
+1. Layar Adzan.
+2. Layar Iqamah.
+3. Layar Syuruq.
+4. Mode Jum'at / Khutbah.
+5. Slide Fullscreen / Multimedia.
+6. Layar Utama Jam Digital.
+
+---
+
+## 11. Flow Contoh Waktu Sholat
+
+Contoh Maghrib:
+
+1. 17:55 — Murottal mulai diputar jika diatur 5 menit sebelum Maghrib.
+2. 18:00 — Waktu Maghrib masuk.
+3. Sistem menghentikan murottal.
+4. Layar adzan tampil.
+5. Audio adzan/alarm diputar.
+6. Setelah durasi adzan selesai, countdown iqamah tampil.
+7. Setelah countdown selesai, layar kembali ke tampilan utama atau slide.
+
+---
+
+## 12. Kebutuhan UI/UX
+
+### Prinsip Desain
+- Teks besar dan kontras.
+- Mudah dibaca dari jarak jauh.
+- Cocok untuk layar TV 16:9.
+- Mendukung resolusi HD, Full HD, dan 4K.
+- Jadwal sholat menjadi informasi utama.
+- Animasi tidak mengganggu.
+- Layout responsif dan otomatis menyesuaikan ukuran layar.
+
+### Referensi Visual
+Berdasarkan contoh lampiran:
+- Bagian atas menampilkan logo, nama masjid, alamat, dan kontak.
+- Bagian tengah menggunakan background visual/foto masjid.
+- Bagian bawah menampilkan jam besar, tanggal, kartu jadwal sholat, dan running text.
+
+---
+
+## 13. Kebutuhan Non-Fungsional
+
+### 13.1 Performa
+- Display harus stabil berjalan minimal 24 jam.
+- Jam digital update real-time tanpa reload halaman.
+- Transisi antar layar halus.
+- Konten multimedia dioptimalkan.
+
+### 13.2 Keandalan
+- Jadwal sholat tetap tersedia saat internet mati.
+- Data jadwal dicache secara lokal.
+- Sistem tetap berjalan meskipun API eksternal gagal.
+
+### 13.3 Keamanan
+- Dashboard admin wajib login.
+- Password dienkripsi.
+- Upload file divalidasi berdasarkan tipe dan ukuran.
+- URL YouTube/livestream divalidasi.
+- Endpoint display hanya menampilkan data yang aman.
+
+### 13.4 Kompatibilitas
+- Android TV / Android Box / tablet Android yang mendukung APK.
+- Mini PC Linux/Windows.
+- Mode immersive fullscreen Android.
+- Layar TV 16:9.
+
+### 13.5 Lokal dan Bahasa
+- UI menggunakan Bahasa Indonesia.
+- Format waktu 24 jam.
+- Zona waktu default Asia/Jakarta.
+
+---
+
+## 14. Integrasi Jadwal Sholat eQuran.id
+
+Sumber jadwal shalat yang digunakan adalah **eQuran.id API Shalat**, bukan Kemenag RI secara langsung. Dokumentasi API: `https://equran.id/apidev/shalat`.
+
+### Endpoint Utama
+- Dokumentasi: `https://equran.id/apidev/shalat`
+- Daftar kota/kabupaten: mengikuti endpoint yang tersedia pada dokumentasi eQuran.id.
+- Jadwal shalat harian/bulanan: mengikuti endpoint jadwal pada dokumentasi eQuran.id.
+
+### Data yang Perlu Diambil
+- Kode/id kota atau kabupaten.
+- Nama kota/kabupaten.
+- Tanggal jadwal.
+- Imsak jika tersedia.
+- Subuh.
+- Terbit/Syuruq/Dhuha jika tersedia dan relevan.
+- Dzuhur.
+- Ashar.
+- Maghrib.
+- Isya.
+
+### Catatan Implementasi
+- Jangan menggunakan API Kemenag RI sebagai sumber utama.
+- Gunakan eQuran.id sebagai sumber jadwal shalat utama.
+- Simpan hasil API ke PostgreSQL Insforge sebagai cache lokal.
+- Jika API eQuran.id gagal diakses, aplikasi tetap memakai jadwal terakhir dari cache.
+- Tetap dukung koreksi manual plus/minus menit per waktu shalat.
+
+
+Aplikasi perlu menyediakan service untuk mengambil jadwal sholat eQuran.id.
+
+### Kebutuhan
+- Sinkronisasi jadwal harian/bulanan.
+- Simpan hasil ke database.
+- Retry jika gagal.
+- Cache lokal sebagai fallback.
+
+### Scheduled Job Insforge yang Disarankan
+
+```bash
+Insforge scheduled function / cron sync jadwal shalat
+```
+
+---
+
+## 15. Role dan Hak Akses
+
+### Admin
+Dapat mengelola seluruh pengaturan aplikasi.
+
+### Display / Public
+Hanya dapat melihat tampilan aktif dan tidak dapat mengubah data.
+
+---
+
+## 16. MVP
+
+### Prioritas MVP
+1. Login admin.
+2. Profil masjid.
+3. Jadwal sholat berdasarkan kota/kabupaten.
+4. Koreksi manual waktu sholat.
+5. Layar utama jam digital.
+6. Tanggal Masehi dan Hijriyah.
+7. Countdown menuju waktu sholat berikutnya.
+8. Layar adzan.
+9. Countdown iqamah.
+10. Running text.
+11. Upload logo dan background.
+12. Slide gambar.
+13. Tema dasar.
+14. QR donasi.
+15. Mode Jum'at dasar.
+
+### Setelah MVP
+1. Video upload.
+2. YouTube embed.
+3. Livestream.
+4. Murottal otomatis.
+5. Dzikir pagi dan petang.
+6. Tabel informasi.
+7. Konten ayat/hadits.
+8. Template desain lanjutan.
+9. Agenda dan hari besar Islam.
+10. Layout builder berbasis konfigurasi widget Flutter.
+
+---
+
+## 17. User Stories
+
+### 17.1 Admin Mengatur Profil Masjid
+Sebagai admin, saya ingin mengubah nama, alamat, kontak, dan logo masjid agar tampilan layar sesuai identitas masjid.
+
+Acceptance Criteria:
+- Admin dapat membuka halaman profil masjid.
+- Admin dapat mengupload logo.
+- Admin dapat menyimpan perubahan.
+- Data baru tampil di layar utama.
+
+### 17.2 Admin Memilih Kota Jadwal Sholat
+Sebagai admin, saya ingin memilih kota/kabupaten agar jadwal sholat sesuai lokasi masjid.
+
+Acceptance Criteria:
+- Admin dapat memilih provinsi.
+- Admin dapat memilih kota/kabupaten.
+- Sistem mengambil jadwal sesuai lokasi.
+- Jadwal tampil di layar utama.
+
+### 17.3 Admin Mengatur Iqamah
+Sebagai admin, saya ingin mengatur durasi iqamah per waktu sholat agar sesuai kebiasaan masjid.
+
+Acceptance Criteria:
+- Admin dapat mengatur durasi iqamah Subuh, Dzuhur, Ashar, Maghrib, dan Isya.
+- Admin dapat menonaktifkan iqamah untuk Jum'at.
+- Countdown tampil sesuai durasi yang diatur.
+
+### 17.4 Jama'ah Melihat Jadwal Sholat
+Sebagai jama'ah, saya ingin melihat jadwal sholat dari jauh agar mengetahui waktu sholat berikutnya dengan jelas.
+
+Acceptance Criteria:
+- Jam digital terlihat besar.
+- Jadwal sholat tampil dalam kartu yang jelas.
+- Waktu sholat berikutnya diberi highlight.
+- Countdown waktu berikutnya tampil jelas.
+
+### 17.5 Admin Menampilkan Pengumuman
+Sebagai admin, saya ingin menampilkan pengumuman berjalan agar jama'ah mengetahui informasi penting.
+
+Acceptance Criteria:
+- Admin dapat membuat running text.
+- Running text muncul di bawah layar.
+- Teks bergerak dengan animasi halus.
+
+---
+
+## 18. Rekomendasi Struktur API Insforge
+
+Backend menggunakan Insforge sebagai penyedia API, auth, storage, dan PostgreSQL. Struktur endpoint yang disarankan:
+
+```txt
+GET    /api/display/state
+GET    /api/mosque-profile
+PATCH  /api/mosque-profile
+GET    /api/prayer-locations
+POST   /api/prayer-locations/active
+POST   /api/prayer-schedules/sync
+GET    /api/prayer-schedules/today
+PATCH  /api/prayer-time-corrections
+GET    /api/iqamah-settings
+PATCH  /api/iqamah-settings
+GET    /api/media-items
+POST   /api/media-items
+PATCH  /api/media-items/{id}
+DELETE /api/media-items/{id}
+GET    /api/running-texts
+POST   /api/running-texts
+PATCH  /api/running-texts/{id}
+DELETE /api/running-texts/{id}
+GET    /api/audio-settings
+PATCH  /api/audio-settings
+GET    /api/donation-settings
+PATCH  /api/donation-settings
+GET    /api/theme-settings
+PATCH  /api/theme-settings
+GET    /api/hadith-items
+POST   /api/hadith-items/sync
+GET    /api/dua-items
+POST   /api/dua-items/sync
+```
+
+---
+
+## 19. Rekomendasi Struktur Frontend Flutter
+
+Gunakan struktur Dart yang mengikuti fitur aktual. Dashboard admin web tetap berada pada `backend/admin_public`.
+
+```txt
+lib/
+├── main.dart
+├── models/
+├── services/
+├── screens/
+├── widgets/
+└── utils/
+
+backend/
+├── admin_public/
+├── server.cjs
+└── schema.sql
+```
+
+Nama file dan pemecahan folder mengikuti kebutuhan kode aktual; tidak perlu membuat lapisan atau abstraksi kosong.
+
+---
+
+## 20. Display State Logic
+
+```ts
+type DisplayMode =
+  | 'main'
+  | 'adzan'
+  | 'iqamah'
+  | 'syuruq'
+  | 'friday_khutbah'
+  | 'media_fullscreen';
+```
+
+Prioritas state:
+
+```ts
+if (isPrayerTimeNow) {
+  mode = 'adzan';
+} else if (isIqamahCountdownActive) {
+  mode = 'iqamah';
+} else if (isSyuruqReminderActive) {
+  mode = 'syuruq';
+} else if (isFridayKhutbahMode) {
+  mode = 'friday_khutbah';
+} else {
+  mode = 'main';
+}
+```
+
+---
+
+## 21. Environment Configuration
+
+### Local
+
+```env
+APP_NAME="Masjid Display"
+APP_ENV=local
+APP_URL=https://masjid.test
+APP_TIMEZONE=Asia/Jakarta
+APP_LOCALE=id
+
+INSFORGE_PROJECT_URL=https://masjid.test
+INSFORGE_DATABASE=postgresql
+INSFORGE_API_KEY=local_api_key
+
+FILESYSTEM_DISK=public
+```
+
+### Production
+
+```env
+APP_NAME="Masjid Display"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://masjid.alihdayahsiteba.web.id
+APP_TIMEZONE=Asia/Jakarta
+APP_LOCALE=id
+
+INSFORGE_PROJECT_URL=https://masjid.alihdayahsiteba.web.id
+INSFORGE_DATABASE=postgresql
+INSFORGE_API_KEY=production_api_key
+
+FILESYSTEM_DISK=public
+```
+
+---
+
+## 22. Deployment Production
+
+### Checklist Backend InsForge
+
+1. Terapkan schema PostgreSQL melalui tooling resmi InsForge.
+2. Konfigurasikan InsForge Auth, Storage, API/backend function, dan secret produksi.
+3. Deploy dashboard admin web dan backend/API.
+4. Verifikasi HTTPS, RLS/otorisasi, upload storage, serta `GET /api/v1/display/state`.
+5. Jangan menaruh service key atau secret backend dalam APK, dashboard publik, atau repository.
+
+### Checklist Flutter APK
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release
+```
+
+Pasang APK release pada Android TV/Android Box, aktifkan mode fullscreen/kiosk sesuai perangkat, lalu uji cache offline dan flow adzan–iqamah.
+
+---
+
+## 23. Success Metrics
+
+Produk dianggap berhasil jika:
+
+1. Jadwal sholat tampil akurat sesuai lokasi.
+2. Display berjalan stabil minimal 24 jam tanpa reload manual.
+3. Admin dapat mengubah konten tanpa bantuan teknis.
+4. Jama'ah dapat membaca jam dan jadwal dari jarak jauh.
+5. Layar adzan dan iqamah muncul otomatis sesuai jadwal.
+6. Running text dan slide berjalan lancar.
+7. Konten multimedia tidak mengganggu fungsi utama jadwal sholat.
+
+---
+
+## 24. Risiko dan Mitigasi
+
+| Risiko | Dampak | Mitigasi |
+|---|---|---|
+| API eQuran.id tidak tersedia | Jadwal tidak update | Simpan cache jadwal bulanan |
+| Perangkat Android membatasi autoplay/perizinan audio | Audio tidak berbunyi | Gunakan permission audio Android, mode kiosk/launcher, dan pengaturan agar aplikasi tetap aktif |
+| File video terlalu besar | Display lambat | Batasi ukuran file dan rekomendasikan kompresi |
+| TV berbeda resolusi | Tampilan tidak proporsional | Gunakan layout responsif 16:9 |
+| Koneksi internet mati | YouTube/livestream gagal | Tetap tampilkan jadwal dan konten lokal |
+| Admin salah konfigurasi | Display terganggu | Tambahkan preview dan reset tema default |
+
+---
+
+## 25. Instruksi Implementasi untuk Antigravity
+
+Gunakan PRD ini sebagai acuan utama untuk membangun aplikasi Insforge sebagai backend, Flutter sebagai frontend APK Android, dan PostgreSQL bawaan Insforge.
+
+Prioritas implementasi:
+
+1. Setup project Insforge di `/home/naval/www/masjid.test`.
+2. Konfigurasi domain lokal `https://masjid.test`.
+3. Setup Flutter APK Android.
+4. Buat autentikasi admin.
+5. Buat schema dan model utama:
+   - MosqueProfile
+   - PrayerLocation
+   - PrayerSchedule
+   - PrayerTimeCorrection
+   - IqamahSetting
+   - MediaItem
+   - RunningText
+   - AudioSetting
+   - DonationSetting
+   - ThemeSetting
+6. Buat dashboard admin berbahasa Indonesia.
+7. Buat halaman display fullscreen `/display`.
+8. Implementasikan jam digital real-time dengan timezone Asia/Jakarta.
+9. Implementasikan jadwal sholat dan koreksi manual.
+10. Implementasikan layar adzan dan countdown iqamah.
+11. Implementasikan running text dan slide gambar.
+12. Tambahkan fitur multimedia lanjutan setelah MVP stabil.
+
+---
+
+## 26. Definisi Selesai
+
+Sebuah fitur dianggap selesai apabila:
+
+- Backend endpoint tersedia.
+- Database schema tersedia.
+- Model dan validasi tersedia.
+- Halaman admin tersedia.
+- Tampilan display membaca data fitur tersebut.
+- UI menggunakan Bahasa Indonesia.
+- Responsif di layar desktop/TV.
+- Tidak ada error console utama.
+- Data dapat dibuat, diedit, disimpan, dan ditampilkan.
+- Fitur tidak mengganggu prioritas utama jadwal sholat, adzan, dan iqamah.
+
+
+---
+
+## 27. Workflow Aplikasi
+
+Bagian ini menjelaskan alur kerja utama aplikasi dari sisi admin, sistem, dan display TV masjid.
+
+---
+
+## 27.1 Workflow Setup Awal Aplikasi
+
+### Aktor
+Admin / Pengurus Masjid.
+
+### Tujuan
+Menyiapkan aplikasi agar siap digunakan di layar TV masjid.
+
+### Alur
+1. Admin membuka halaman login.
+2. Admin masuk menggunakan email dan password.
+3. Admin membuka halaman Profil Masjid.
+4. Admin mengisi nama masjid, alamat, kontak, logo, dan background.
+5. Admin membuka halaman Jadwal Sholat.
+6. Admin memilih provinsi dan kota/kabupaten.
+7. Sistem mengambil jadwal sholat dari sumber eQuran.id.
+8. Sistem menyimpan jadwal ke database sebagai cache lokal.
+9. Admin mengatur koreksi waktu sholat jika diperlukan.
+10. Admin mengatur durasi iqamah untuk setiap waktu sholat.
+11. Admin mengatur running text awal.
+12. Admin mengatur tema dasar tampilan.
+13. Admin membuka URL `/display` pada perangkat TV atau mini PC.
+14. Display menampilkan jam digital dan jadwal sholat aktif.
+
+### Output
+Aplikasi siap digunakan di layar TV masjid.
+
+---
+
+## 27.2 Workflow Login Admin
+
+### Aktor
+Admin.
+
+### Alur
+1. Admin membuka `/admin/login`.
+2. Admin memasukkan email dan password.
+3. Sistem memvalidasi kredensial.
+4. Jika valid, admin diarahkan ke `/admin/dashboard`.
+5. Jika tidak valid, sistem menampilkan pesan kesalahan dalam Bahasa Indonesia.
+
+### Acceptance Criteria
+- Admin tidak dapat mengakses halaman pengaturan tanpa login.
+- Pesan error login mudah dipahami.
+- Setelah logout, session admin berakhir.
+
+---
+
+## 27.3 Workflow Sinkronisasi Jadwal Sholat
+
+### Aktor
+Admin dan sistem.
+
+### Trigger
+- Admin memilih lokasi baru.
+- Admin menekan tombol sinkronisasi.
+- Scheduler Insforge berjalan otomatis harian/bulanan.
+
+### Alur
+1. Sistem membaca lokasi aktif dari `prayer_locations`.
+2. Sistem menghubungi sumber API jadwal shalat eQuran.id.
+3. Sistem mengambil jadwal berdasarkan kota/kabupaten dan bulan berjalan.
+4. Sistem memvalidasi format data jadwal.
+5. Sistem menyimpan atau memperbarui data pada `prayer_schedules`.
+6. Jika API gagal, sistem mencatat error dan tetap menggunakan cache terakhir.
+7. Display membaca jadwal dari database lokal.
+
+### Output
+Jadwal sholat terbaru tersedia untuk display.
+
+### Fallback
+Jika koneksi internet atau API gagal:
+- Gunakan jadwal yang sudah tersimpan.
+- Tampilkan status sinkronisasi terakhir di dashboard admin.
+- Jangan mengosongkan jadwal display.
+
+---
+
+## 27.4 Workflow Koreksi Manual Waktu Sholat
+
+### Aktor
+Admin.
+
+### Alur
+1. Admin membuka halaman Jadwal Sholat.
+2. Admin melihat daftar waktu sholat.
+3. Admin mengisi koreksi menit untuk setiap waktu sholat.
+4. Nilai dapat berupa minus, nol, atau plus.
+5. Admin menyimpan perubahan.
+6. Sistem menyimpan data ke `prayer_time_corrections`.
+7. Display menampilkan jadwal sholat setelah koreksi.
+
+### Contoh
+- Jadwal eQuran.id Maghrib: 18:00.
+- Koreksi Maghrib: +2 menit.
+- Display menampilkan Maghrib: 18:02.
+
+---
+
+## 27.5 Workflow Display Harian
+
+### Aktor
+Sistem dan jama'ah.
+
+### Alur
+1. Display dibuka melalui `/display`.
+2. Frontend mengambil state awal dari backend.
+3. Sistem membaca profil masjid, jadwal sholat hari ini, koreksi waktu, tema, running text, dan konten aktif.
+4. Jam digital berjalan real-time di frontend.
+5. Sistem menentukan waktu sholat berikutnya.
+6. Display menampilkan countdown menuju waktu sholat berikutnya.
+7. Running text berjalan di bawah layar.
+8. Slide aktif tampil sesuai urutan dan durasi.
+9. Display terus mengecek perubahan state secara berkala.
+
+### Output
+Jama'ah melihat jam digital, jadwal sholat, countdown, dan informasi masjid secara real-time.
+
+---
+
+## 27.6 Workflow Pergantian Mode Display
+
+### Prioritas Mode
+1. Adzan.
+2. Iqamah.
+3. Syuruq.
+4. Jum'at / Khutbah.
+5. Media fullscreen.
+6. Main display.
+
+### Alur
+1. Frontend membaca waktu saat ini berdasarkan timezone Asia/Jakarta.
+2. Sistem membandingkan waktu saat ini dengan jadwal sholat terkoreksi.
+3. Jika masuk waktu sholat, mode berubah menjadi `adzan`.
+4. Jika durasi adzan selesai dan iqamah aktif, mode berubah menjadi `iqamah`.
+5. Jika countdown iqamah selesai, mode kembali ke `main` atau mode khutbah untuk Jum'at.
+6. Jika masuk syuruq, mode berubah menjadi `syuruq`.
+7. Jika tidak ada event khusus, mode tetap `main` atau `media_fullscreen` sesuai konfigurasi.
+
+### Pseudocode
+```ts
+if (isPrayerTimeNow) {
+  displayMode = 'adzan';
+} else if (isIqamahActive) {
+  displayMode = 'iqamah';
+} else if (isSyuruqTimeNow) {
+  displayMode = 'syuruq';
+} else if (isFridayKhutbahActive) {
+  displayMode = 'friday_khutbah';
+} else if (isMediaFullscreenActive) {
+  displayMode = 'media_fullscreen';
+} else {
+  displayMode = 'main';
+}
+```
+
+---
+
+## 27.7 Workflow Adzan
+
+### Aktor
+Sistem dan jama'ah.
+
+### Trigger
+Waktu sholat terkoreksi sama dengan waktu saat ini.
+
+### Alur
+1. Sistem mendeteksi masuk waktu sholat.
+2. Sistem menghentikan audio lain yang sedang berjalan, seperti murottal atau dzikir.
+3. Display berubah ke layar adzan.
+4. Display menampilkan nama waktu sholat, misalnya “Waktu Maghrib”.
+5. Audio adzan/alarm diputar otomatis.
+6. Layar adzan tampil selama durasi yang diatur admin.
+7. Setelah selesai, sistem memeriksa apakah iqamah aktif untuk waktu tersebut.
+8. Jika aktif, display masuk ke mode iqamah.
+9. Jika tidak aktif, display kembali ke mode utama.
+
+### Acceptance Criteria
+- Layar adzan muncul tepat waktu.
+- Audio adzan tidak bertumpuk dengan audio lain.
+- Display tidak menampilkan slide saat adzan berlangsung.
+
+---
+
+## 27.8 Workflow Iqamah
+
+### Aktor
+Sistem dan jama'ah.
+
+### Trigger
+Durasi layar adzan selesai dan iqamah aktif.
+
+### Alur
+1. Sistem membaca durasi iqamah dari `iqamah_settings`.
+2. Display menampilkan countdown iqamah.
+3. Countdown berjalan mundur setiap detik.
+4. Saat countdown selesai, display menampilkan pesan “Iqamah” atau “Shalat segera dimulai”.
+5. Setelah durasi pesan selesai, display kembali ke mode utama.
+
+### Kondisi Khusus
+- Untuk shalat Jum'at, iqamah dapat dinonaktifkan.
+- Jika iqamah nonaktif, sistem langsung masuk ke mode khutbah atau kembali ke layar utama.
+
+---
+
+## 27.9 Workflow Syuruq
+
+### Aktor
+Sistem dan jama'ah.
+
+### Trigger
+Waktu syuruq tiba.
+
+### Alur
+1. Sistem mendeteksi waktu syuruq.
+2. Display menampilkan layar pengingat syuruq.
+3. Layar menampilkan pesan waktu terlarang untuk sholat.
+4. Layar tampil selama durasi yang diatur admin.
+5. Setelah selesai, display kembali ke mode utama.
+
+---
+
+## 27.10 Workflow Murottal Sebelum Adzan
+
+### Aktor
+Sistem.
+
+### Trigger
+Waktu saat ini mencapai X menit sebelum waktu sholat tertentu.
+
+### Alur
+1. Sistem membaca pengaturan murottal aktif.
+2. Sistem menghitung waktu mulai berdasarkan `play_before_minutes`.
+3. Saat waktu mulai tercapai, audio murottal diputar.
+4. Audio tetap berjalan hingga durasi selesai atau waktu adzan tiba.
+5. Saat adzan tiba, murottal otomatis dihentikan.
+6. Display masuk ke mode adzan.
+
+### Acceptance Criteria
+- Murottal hanya diputar pada waktu sholat yang diaktifkan.
+- Audio berhenti saat adzan.
+- Audio tidak berjalan bersamaan dengan adzan.
+
+---
+
+## 27.11 Workflow Dzikir Pagi dan Petang
+
+### Aktor
+Sistem.
+
+### Trigger
+- Setelah Subuh untuk dzikir pagi.
+- Setelah Ashar untuk dzikir petang.
+
+### Alur
+1. Sistem membaca pengaturan dzikir aktif.
+2. Sistem menunggu waktu mulai setelah Subuh atau Ashar.
+3. Audio dzikir diputar otomatis.
+4. Audio berhenti setelah selesai atau ketika ada event prioritas lebih tinggi.
+5. Jika masuk waktu sholat lain, audio dihentikan.
+
+---
+
+## 27.12 Workflow Manajemen Konten Multimedia
+
+### Aktor
+Admin.
+
+### Alur
+1. Admin membuka halaman Konten.
+2. Admin memilih jenis konten:
+   - Gambar.
+   - Video.
+   - YouTube.
+   - Livestream.
+   - Teks dakwah.
+   - Tabel informasi.
+   - QR donasi.
+3. Admin mengisi judul, durasi tampil, jadwal tampil, dan status aktif.
+4. Untuk file lokal, admin mengupload file.
+5. Untuk YouTube/livestream, admin memasukkan URL.
+6. Sistem memvalidasi file atau URL.
+7. Sistem menyimpan data ke `media_items`.
+8. Display memasukkan konten aktif ke dalam rotasi slide.
+
+### Acceptance Criteria
+- Konten nonaktif tidak tampil di display.
+- Konten yang memiliki jadwal tampil hanya muncul pada rentang waktu yang ditentukan.
+- Konten berhenti sementara saat adzan dan iqamah.
+
+---
+
+## 27.13 Workflow Running Text
+
+### Aktor
+Admin dan sistem.
+
+### Alur
+1. Admin membuka halaman Running Text.
+2. Admin membuat atau mengedit teks berjalan.
+3. Admin mengatur kecepatan, warna, status aktif, dan jadwal tampil.
+4. Sistem menyimpan data ke `running_texts`.
+5. Display membaca running text aktif.
+6. Running text berjalan di bagian bawah layar.
+
+### Acceptance Criteria
+- Running text aktif tampil otomatis.
+- Running text dapat dijadwalkan.
+- Running text tidak menutupi informasi utama jadwal sholat.
+
+---
+
+## 27.14 Workflow QR Donasi
+
+### Aktor
+Admin dan jama'ah.
+
+### Alur
+1. Admin membuka halaman Donasi.
+2. Admin mengisi nama program donasi.
+3. Admin mengupload QR code.
+4. Admin mengisi deskripsi dan nama akun/rekening.
+5. Admin mengaktifkan status donasi.
+6. QR donasi tampil di display atau sebagai slide.
+7. Jama'ah melakukan scan QR dari layar TV.
+
+### Acceptance Criteria
+- QR code tampil jelas.
+- QR code tidak terdistorsi.
+- QR code dapat dipindai dari jarak wajar.
+
+---
+
+## 27.15 Workflow Mode Jum'at
+
+### Aktor
+Admin dan sistem.
+
+### Trigger
+Hari Jumat dan mode Jum'at aktif.
+
+### Alur
+1. Sistem mendeteksi hari Jumat berdasarkan timezone Asia/Jakarta.
+2. Label Dzuhur berubah menjadi Jum'at.
+3. Ketika masuk waktu Jum'at, display menampilkan layar adzan.
+4. Setelah adzan selesai, sistem memeriksa pengaturan Jum'at.
+5. Jika iqamah Jum'at dinonaktifkan, sistem tidak menampilkan countdown iqamah.
+6. Display menampilkan slide khusus khutbah atau pesan “Khutbah sedang berlangsung”.
+7. Setelah durasi khutbah selesai, display kembali ke mode utama.
+
+### Acceptance Criteria
+- Label Jum'at tampil otomatis pada hari Jumat.
+- Reminder iqamah dapat dimatikan khusus Jum'at.
+- Slide khutbah dapat tampil selama khutbah.
+
+---
+
+## 27.16 Workflow Kustomisasi Desain
+
+### Aktor
+Admin.
+
+### Alur
+1. Admin membuka halaman Desain.
+2. Admin memilih tema dasar.
+3. Admin mengubah warna utama, warna teks, background, font size, dan layout.
+4. Admin melihat preview tampilan.
+5. Admin menyimpan konfigurasi.
+6. Sistem menyimpan data ke `theme_settings`.
+7. Display menerapkan tema aktif.
+
+### Acceptance Criteria
+- Tema aktif langsung digunakan display.
+- Preview membantu admin sebelum menyimpan.
+- Jika konfigurasi rusak, admin dapat kembali ke tema default.
+
+---
+
+## 27.17 Workflow Tabel Informasi
+
+### Aktor
+Admin.
+
+### Alur
+1. Admin membuka halaman Tabel Informasi.
+2. Admin membuat tabel baru.
+3. Admin mengisi judul tabel.
+4. Admin menambah kolom dan baris.
+5. Admin mengisi data tabel.
+6. Admin mengatur durasi tampil dan status aktif.
+7. Sistem menyimpan tabel sebagai konten media tipe `table`.
+8. Display menampilkan tabel dalam rotasi slide.
+
+### Contoh Penggunaan
+- Jadwal khutbah Jumat.
+- Laporan kas masjid.
+- Jadwal imam dan muadzin.
+
+---
+
+## 27.18 Workflow Agenda dan Hari Besar Islam
+
+### Aktor
+Admin dan sistem.
+
+### Alur
+1. Admin membuka halaman Agenda.
+2. Admin membuat agenda baru.
+3. Admin mengisi judul, tanggal, waktu, deskripsi, dan status aktif.
+4. Sistem menyimpan agenda.
+5. Ketika agenda mendekati tanggal tampil, display menampilkan notifikasi.
+6. Untuk hari besar Islam, sistem dapat menampilkan data otomatis atau berdasarkan input manual admin.
+
+### Acceptance Criteria
+- Agenda mendatang tampil di layar utama.
+- Agenda lama otomatis tidak diprioritaskan.
+- Notifikasi tidak mengganggu jadwal sholat.
+
+---
+
+## 27.19 Workflow Update State Display
+
+### Aktor
+Frontend display dan backend.
+
+### Alur
+1. Display memuat halaman `/display`.
+2. Frontend mengambil state dari `/display/state`.
+3. State berisi:
+   - Profil masjid.
+   - Jadwal sholat hari ini.
+   - Koreksi waktu.
+   - Iqamah settings.
+   - Audio settings.
+   - Media aktif.
+   - Running text aktif.
+   - Theme aktif.
+   - Agenda aktif.
+4. Frontend menyimpan state di memori.
+5. Frontend melakukan polling berkala, misalnya setiap 30-60 detik.
+6. Jika ada perubahan, frontend memperbarui tampilan tanpa reload penuh.
+
+### Alternatif Lanjutan
+Pada versi berikutnya, polling dapat diganti atau dilengkapi dengan WebSocket/SSE agar perubahan tampil real-time.
+
+---
+
+## 27.20 Workflow Error Handling
+
+### Jadwal Sholat Gagal Sinkron
+1. Sistem mencatat error.
+2. Dashboard menampilkan status gagal sinkron.
+3. Display tetap menggunakan cache jadwal terakhir.
+
+### Audio Gagal Diputar
+1. Sistem menampilkan indikator audio gagal jika diperlukan.
+2. Display tetap menampilkan layar adzan/iqamah.
+3. Admin dapat mengganti file audio dari dashboard.
+
+### Konten Media Gagal Dimuat
+1. Sistem melewati konten yang gagal.
+2. Display melanjutkan ke slide berikutnya.
+3. Error dicatat untuk admin.
+
+### Aplikasi Dimulai Ulang / Mati Listrik
+1. Saat aplikasi Flutter dibuka ulang, aplikasi memuat cache lokal lalu mengambil state terbaru dari `GET /api/v1/display/state`.
+2. Sistem menentukan mode berdasarkan waktu saat ini.
+3. Display langsung masuk ke mode yang sesuai.
+
+---
+
+## 27.21 Workflow Deployment
+
+### Local Development
+1. Developer masuk ke folder `/home/naval/www/masjid.test`.
+2. Install dependency backend dan frontend.
+3. Konfigurasi `.env` lokal.
+4. Jalankan schema dan seeder.
+5. Jalankan Flutter development build.
+6. Buka `https://masjid.test`.
+
+### Production
+1. Terapkan schema PostgreSQL dan konfigurasi storage/auth melalui tooling resmi InsForge.
+2. Deploy backend/API dan dashboard admin ke environment produksi.
+3. Konfigurasikan secret dan URL InsForge produksi; jangan simpan service key dalam APK atau repository.
+4. Jalankan `flutter pub get` jika dependency berubah.
+5. Jalankan `flutter build apk --release`.
+6. Pasang APK release pada perangkat Android TV/Android Box.
+7. Verifikasi login admin, `GET /api/v1/display/state`, storage, cache offline, audio, dan flow adzan–iqamah.
+
+---
+
+## 28. Diagram Workflow Ringkas
+
+```txt
+Admin Login
+    ↓
+Setup Profil Masjid
+    ↓
+Pilih Lokasi Jadwal Sholat
+    ↓
+Sinkronisasi Jadwal eQuran.id
+    ↓
+Atur Koreksi Waktu + Iqamah
+    ↓
+Atur Tema + Konten + Running Text
+    ↓
+Buka /display di TV
+    ↓
+Display Menampilkan Jam dan Jadwal
+    ↓
+Dekat Waktu Sholat?
+    ├── Tidak → Tampilkan Main Display / Slide
+    └── Ya
+        ↓
+      Putar Murottal jika aktif
+        ↓
+      Masuk Waktu Sholat
+        ↓
+      Layar Adzan + Audio
+        ↓
+      Countdown Iqamah jika aktif
+        ↓
+      Kembali ke Main Display / Mode Khutbah Jumat
+```
+
+
+---
+
+## 29. Daftar Fitur, Sub-Fitur, dan Task Implementasi
+
+Bagian ini memecah kebutuhan produk menjadi fitur utama, sub-fitur, dan task teknis yang bisa langsung dijadikan backlog implementasi di Antigravity.
+
+---
+
+## 29.1 Fitur: Autentikasi dan Dashboard Admin
+
+### Sub-Fitur 29.1.1 Login Admin
+
+#### Task Backend
+- Buat sistem autentikasi admin menggunakan Insforge authentication.
+- Buat route `/admin/login`, `/admin/logout`, dan auth guard/policy Insforge untuk area admin.
+- Buat validasi login email dan password.
+- Pastikan password disimpan menggunakan hashing/auth bawaan Insforge.
+
+#### Task Frontend
+- Buat halaman login admin dengan REST API / JSON API + Flutter.
+- Tampilkan pesan error login dalam Bahasa Indonesia.
+- Tambahkan loading state saat submit form.
+
+#### Task Testing
+- Test login berhasil.
+- Test login gagal dengan email/password salah.
+- Test halaman admin tidak bisa diakses tanpa login.
+
+---
+
+### Sub-Fitur 29.1.2 Dashboard Admin
+
+#### Task Backend
+- Buat backend function/API handler `DashboardBackend Function/API Handler`.
+- Ambil ringkasan data profil masjid, lokasi aktif, jadwal hari ini, status sinkronisasi, jumlah konten aktif, dan running text aktif.
+
+#### Task Frontend
+- Buat halaman `/admin/dashboard`.
+- Tampilkan kartu ringkasan status aplikasi.
+- Tampilkan status display, jadwal hari ini, lokasi aktif, dan sinkronisasi terakhir.
+
+#### Task Testing
+- Pastikan dashboard hanya bisa diakses admin login.
+- Pastikan data ringkasan tampil sesuai database.
+
+---
+
+## 29.2 Fitur: Profil Masjid
+
+### Sub-Fitur 29.2.1 Identitas Masjid
+
+#### Task Backend
+- Buat schema `mosque_profiles`.
+- Buat model `MosqueProfile`.
+- Buat backend function/API handler `MosqueProfileBackend Function/API Handler`.
+- Buat validasi field nama, alamat, kontak, dan timezone.
+- Buat seeder profil default.
+
+#### Task Frontend
+- Buat halaman `/admin/profil-masjid`.
+- Buat form nama masjid, alamat, kontak, dan timezone.
+- Tampilkan preview informasi masjid.
+
+#### Task Testing
+- Test simpan profil masjid.
+- Test validasi nama wajib diisi.
+- Test perubahan tampil pada `/display`.
+
+---
+
+### Sub-Fitur 29.2.2 Upload Logo dan Background
+
+#### Task Backend
+- Tambahkan validasi upload logo dan background.
+- Batasi tipe file: JPG, PNG, WebP, SVG untuk logo jika diperlukan.
+- Simpan file ke bucket InsForge Storage yang sesuai.
+- Hapus objek lama jika diganti dan tidak lagi direferensikan.
+- Terapkan policy storage dan URL akses sesuai kebutuhan admin/display.
+
+#### Task Frontend
+- Buat komponen `FileUpload`.
+- Tampilkan preview logo dan background.
+- Tambahkan tombol hapus/ganti file.
+
+#### Task Testing
+- Test upload logo valid.
+- Test upload file tidak valid ditolak.
+- Test logo tampil di display.
+
+---
+
+## 29.3 Fitur: Jadwal Sholat eQuran.id
+
+### Sub-Fitur 29.3.1 Master Lokasi
+
+#### Task Backend
+- Buat schema `prayer_locations`.
+- Buat model `PrayerLocation`.
+- Siapkan struktur data provinsi dan kota/kabupaten.
+- Buat endpoint untuk daftar provinsi.
+- Buat endpoint untuk daftar kota/kabupaten berdasarkan provinsi.
+- Simpan `city_code` sesuai kode sumber jadwal eQuran.id.
+
+#### Task Frontend
+- Buat select provinsi.
+- Buat select kota/kabupaten yang berubah berdasarkan provinsi.
+- Tandai lokasi aktif.
+
+#### Task Testing
+- Test memilih provinsi.
+- Test memilih kota/kabupaten.
+- Test hanya satu lokasi aktif.
+
+---
+
+### Sub-Fitur 29.3.2 Sinkronisasi Jadwal Sholat
+
+#### Task Backend
+- Buat service `PrayerScheduleService`.
+- Buat client untuk mengambil data API jadwal shalat eQuran.id.
+- Buat schema `prayer_schedules`.
+- Buat model `PrayerSchedule`.
+- Buat scheduled job `Insforge scheduled function / cron sync jadwal shalat`.
+- Simpan jadwal harian/bulanan ke database.
+- Tambahkan field `source` dan metadata sinkronisasi.
+- Buat mekanisme retry jika request gagal.
+
+#### Task Frontend
+- Tambahkan tombol “Sinkronkan Jadwal”.
+- Tampilkan status sinkronisasi terakhir.
+- Tampilkan pesan berhasil/gagal.
+
+#### Task Testing
+- Test sinkronisasi berhasil.
+- Test fallback saat API gagal.
+- Test jadwal hari ini tersedia dari cache.
+
+---
+
+### Sub-Fitur 29.3.3 Tampilan Jadwal Hari Ini
+
+#### Task Backend
+- Buat query jadwal hari ini berdasarkan timezone Asia/Jakarta.
+- Terapkan koreksi manual sebelum dikirim ke frontend.
+- Tambahkan logika label Dzuhur menjadi Jum'at pada hari Jumat.
+
+#### Task Frontend
+- Tampilkan daftar jadwal sholat di display.
+- Buat komponen `PrayerCard`.
+- Highlight waktu sholat berikutnya.
+
+#### Task Testing
+- Test jadwal tampil di `/display`.
+- Test hari Jumat menampilkan label Jum'at.
+- Test waktu berikutnya ter-highlight.
+
+---
+
+## 29.4 Fitur: Koreksi Waktu Sholat
+
+### Sub-Fitur 29.4.1 Koreksi Per Waktu Sholat
+
+#### Task Backend
+- Buat schema `prayer_time_corrections`.
+- Buat model `PrayerTimeCorrection`.
+- Buat validasi nilai integer minus/plus.
+- Buat default koreksi 0 untuk setiap waktu sholat.
+- Terapkan koreksi saat menghitung jadwal display.
+
+#### Task Frontend
+- Buat input koreksi menit untuk Subuh, Syuruq, Dzuhur/Jum'at, Ashar, Maghrib, dan Isya.
+- Tampilkan preview waktu asli dan waktu setelah koreksi.
+
+#### Task Testing
+- Test koreksi + menit.
+- Test koreksi - menit.
+- Test display memakai waktu terkoreksi.
+
+---
+
+## 29.5 Fitur: Display Utama TV
+
+### Sub-Fitur 29.5.1 Layout Display Fullscreen
+
+#### Task Backend
+- Sediakan endpoint publik terbatas `GET /api/v1/display/state`.
+- Kirim state display melalui JSON API tanpa data admin atau secret.
+
+#### Task Frontend
+- Buat `DisplayLayout` fullscreen rasio 16:9.
+- Buat layout area atas, tengah, bawah, dan running text.
+- Gunakan Flutter widget styling responsive untuk HD, Full HD, dan 4K.
+- Tambahkan mode anti-overflow untuk teks panjang.
+
+#### Task Testing
+- Test tampilan di resolusi 1366x768.
+- Test tampilan di 1920x1080.
+- Test tampilan di 3840x2160 jika memungkinkan.
+
+---
+
+### Sub-Fitur 29.5.2 Jam Digital Real-Time
+
+#### Task Backend
+- Pastikan timezone default aplikasi `Asia/Jakarta`.
+- Sediakan server time pada state awal jika diperlukan.
+
+#### Task Frontend
+- Buat komponen `DigitalClock`.
+- Update jam setiap detik.
+- Format waktu 24 jam.
+- Tampilkan detik jika konfigurasi aktif.
+
+#### Task Testing
+- Test jam berjalan tanpa reload.
+- Test format waktu 24 jam.
+
+---
+
+### Sub-Fitur 29.5.3 Countdown Waktu Sholat Berikutnya
+
+#### Task Backend
+- Kirim daftar waktu sholat terkoreksi untuk hari ini.
+- Jika semua waktu hari ini selesai, hitung waktu Subuh hari berikutnya.
+
+#### Task Frontend
+- Buat utility untuk menentukan waktu sholat berikutnya.
+- Buat countdown HH:mm:ss.
+- Tampilkan label “Menuju Subuh/Maghrib/dll”.
+
+#### Task Testing
+- Test countdown sebelum waktu sholat.
+- Test pergantian waktu berikutnya setelah adzan.
+- Test lintas hari menuju Subuh besok.
+
+---
+
+## 29.6 Fitur: State Engine Display
+
+### Sub-Fitur 29.6.1 Display Mode Engine
+
+#### Task Backend
+- Definisikan struktur response `GET /api/v1/display/state`.
+- Sertakan jadwal, iqamah, adzan, syuruq, Jum'at, media, dan audio settings.
+
+#### Task Frontend
+- Buat type `DisplayMode`.
+- Buat state machine sederhana: `main`, `adzan`, `iqamah`, `syuruq`, `friday_khutbah`, `media_fullscreen`.
+- Terapkan prioritas mode.
+- Pastikan event prioritas tinggi menghentikan media/audio prioritas rendah.
+
+#### Task Testing
+- Test mode adzan mengalahkan media fullscreen.
+- Test mode iqamah setelah adzan.
+- Test kembali ke main setelah event selesai.
+
+---
+
+### Sub-Fitur 29.6.2 Polling State
+
+#### Task Backend
+- Optimalkan endpoint `GET /api/v1/display/state` agar ringan.
+- Tambahkan timestamp `updated_at` atau `version` untuk mendeteksi perubahan.
+
+#### Task Frontend
+- Polling state setiap 30-60 detik.
+- Update tampilan tanpa reload penuh.
+- Tangani error polling tanpa menghentikan display.
+
+#### Task Testing
+- Test perubahan running text tampil tanpa reload manual.
+- Test polling gagal sementara lalu pulih.
+
+---
+
+## 29.7 Fitur: Layar Adzan
+
+### Sub-Fitur 29.7.1 Tampilan Adzan
+
+#### Task Backend
+- Tambahkan pengaturan durasi layar adzan.
+- Kirim nama waktu sholat aktif ke frontend.
+
+#### Task Frontend
+- Buat komponen `AdzanScreen`.
+- Tampilkan teks besar “Waktu [Nama Sholat]”.
+- Tampilkan nama masjid dan pesan adzan.
+- Sembunyikan slide dan running text jika diperlukan.
+
+#### Task Testing
+- Test layar adzan muncul saat waktu sholat.
+- Test durasi layar adzan sesuai setting.
+
+---
+
+### Sub-Fitur 29.7.2 Audio Adzan / Alarm
+
+#### Task Backend
+- Buat konfigurasi audio adzan pada `audio_settings`.
+- Validasi upload audio MP3/WAV/OGG.
+- Simpan volume dan status aktif per waktu sholat.
+
+#### Task Frontend
+- Putar audio saat mode adzan aktif.
+- Stop audio lain sebelum adzan.
+- Tangani lifecycle aplikasi dan kegagalan playback audio Android.
+- Sediakan indikator audio aktif/gagal jika diperlukan.
+
+#### Task Testing
+- Test audio adzan diputar.
+- Test audio murottal berhenti sebelum adzan.
+- Test adzan nonaktif pada waktu tertentu.
+
+---
+
+## 29.8 Fitur: Countdown Iqamah
+
+### Sub-Fitur 29.8.1 Pengaturan Iqamah
+
+#### Task Backend
+- Buat schema `iqamah_settings`.
+- Buat model `IqamahSetting`.
+- Buat default durasi iqamah untuk Subuh, Dzuhur, Ashar, Maghrib, Isya.
+- Tambahkan opsi aktif/nonaktif per waktu sholat.
+
+#### Task Frontend
+- Buat halaman `/admin/iqamah`.
+- Buat input durasi menit dan toggle aktif.
+- Tampilkan preview waktu iqamah.
+
+#### Task Testing
+- Test update durasi iqamah.
+- Test nonaktif iqamah waktu tertentu.
+
+---
+
+### Sub-Fitur 29.8.2 Layar Countdown Iqamah
+
+#### Task Frontend
+- Buat komponen `IqamahCountdown`.
+- Tampilkan countdown besar.
+- Tampilkan pesan setelah countdown selesai.
+- Kembali ke mode utama atau khutbah sesuai kondisi.
+
+#### Task Testing
+- Test countdown berjalan per detik.
+- Test selesai countdown berpindah mode.
+
+---
+
+## 29.9 Fitur: Syuruq
+
+### Sub-Fitur 29.9.1 Pengingat Syuruq
+
+#### Task Backend
+- Tambahkan pengaturan aktif/nonaktif syuruq.
+- Tambahkan durasi layar syuruq.
+- Gunakan waktu syuruq dari jadwal terkoreksi.
+
+#### Task Frontend
+- Buat komponen `SyuruqReminderScreen`.
+- Tampilkan pesan waktu terlarang sholat.
+- Kembali ke main setelah durasi selesai.
+
+#### Task Testing
+- Test syuruq aktif.
+- Test syuruq nonaktif.
+- Test durasi tampil sesuai setting.
+
+---
+
+## 29.10 Fitur: Tanggal Masehi dan Hijriyah
+
+### Sub-Fitur 29.10.1 Tanggal Masehi
+
+#### Task Frontend
+- Format tanggal dalam Bahasa Indonesia.
+- Tampilkan hari, tanggal, bulan, dan tahun.
+
+#### Task Testing
+- Test format tanggal Indonesia.
+- Test timezone Asia/Jakarta.
+
+---
+
+### Sub-Fitur 29.10.2 Tanggal Hijriyah dan Koreksi
+
+#### Task Backend
+- Tambahkan setting koreksi Hijriyah plus/minus hari.
+- Sediakan service konversi tanggal Hijriyah.
+
+#### Task Frontend
+- Tampilkan tanggal Hijriyah di display.
+- Buat input koreksi Hijriyah di admin.
+
+#### Task Testing
+- Test tanggal Hijriyah tampil.
+- Test koreksi +1 dan -1 hari.
+
+---
+
+## 29.11 Fitur: Murottal Sebelum Adzan
+
+### Sub-Fitur 29.11.1 Pengaturan Murottal
+
+#### Task Backend
+- Gunakan `audio_settings` dengan type `murottal`.
+- Simpan waktu sholat terkait.
+- Simpan `play_before_minutes`.
+- Simpan file audio dan volume.
+
+#### Task Frontend
+- Buat form upload audio murottal.
+- Buat toggle aktif per waktu sholat.
+- Buat input mulai berapa menit sebelum adzan.
+
+#### Task Testing
+- Test simpan pengaturan murottal.
+- Test file audio valid.
+
+---
+
+### Sub-Fitur 29.11.2 Playback Murottal
+
+#### Task Frontend
+- Deteksi waktu mulai murottal.
+- Putar audio saat waktunya.
+- Stop audio saat adzan masuk.
+- Jangan putar jika display sedang mode prioritas tinggi.
+
+#### Task Testing
+- Test murottal mulai sebelum adzan.
+- Test murottal berhenti saat adzan.
+
+---
+
+## 29.12 Fitur: Dzikir Pagi dan Petang
+
+### Sub-Fitur 29.12.1 Pengaturan Dzikir
+
+#### Task Backend
+- Gunakan `audio_settings` dengan type `dzikir_pagi` dan `dzikir_petang`.
+- Simpan file audio, volume, status aktif, dan jeda mulai setelah sholat.
+
+#### Task Frontend
+- Buat form upload dzikir pagi dan petang.
+- Buat toggle aktif.
+- Buat input waktu mulai setelah Subuh/Ashar.
+
+#### Task Testing
+- Test pengaturan dzikir tersimpan.
+
+---
+
+### Sub-Fitur 29.12.2 Playback Dzikir
+
+#### Task Frontend
+- Putar dzikir pagi setelah Subuh sesuai setting.
+- Putar dzikir petang setelah Ashar sesuai setting.
+- Stop audio jika masuk event prioritas tinggi.
+
+#### Task Testing
+- Test dzikir pagi berjalan.
+- Test dzikir petang berjalan.
+- Test audio berhenti saat adzan.
+
+---
+
+## 29.13 Fitur: Konten Multimedia
+
+### Sub-Fitur 29.13.1 Manajemen Media Item
+
+#### Task Backend
+- Buat schema `media_items`.
+- Buat model `MediaItem`.
+- Buat CRUD backend function/API handler `MediaItemBackend Function/API Handler`.
+- Validasi type media.
+- Tambahkan field durasi, urutan, status aktif, jadwal mulai, dan jadwal selesai.
+
+#### Task Frontend
+- Buat halaman `/admin/konten`.
+- Buat daftar media.
+- Buat form tambah/edit media.
+- Buat fitur aktif/nonaktif.
+- Buat fitur ubah urutan.
+
+#### Task Testing
+- Test tambah media.
+- Test edit media.
+- Test nonaktif media tidak tampil.
+
+---
+
+### Sub-Fitur 29.13.2 Slide Gambar
+
+#### Task Backend
+- Validasi upload JPG, PNG, WebP.
+- Simpan file ke storage public.
+
+#### Task Frontend
+- Tampilkan gambar sebagai slide.
+- Terapkan object-fit sesuai layout.
+- Gunakan durasi per item.
+
+#### Task Testing
+- Test gambar tampil di display.
+- Test durasi slide.
+
+---
+
+### Sub-Fitur 29.13.3 Slide Video Lokal
+
+#### Task Backend
+- Validasi upload MP4/WebM.
+- Batasi ukuran file.
+- Simpan metadata video jika diperlukan.
+
+#### Task Frontend
+- Tampilkan video dalam slider.
+- Putar otomatis jika browser mengizinkan.
+- Stop video saat adzan/iqamah.
+
+#### Task Testing
+- Test video tampil.
+- Test video berhenti saat mode adzan.
+
+---
+
+### Sub-Fitur 29.13.4 YouTube Embed
+
+#### Task Backend
+- Validasi URL YouTube.
+- Simpan video ID atau URL embed.
+
+#### Task Frontend
+- Putar YouTube memakai integrasi Flutter yang kompatibel dengan Android TV.
+- Atur autoplay/mute sesuai kemampuan perangkat.
+- Lewati item jika pemutar gagal.
+
+#### Task Testing
+- Test URL YouTube valid.
+- Test URL tidak valid ditolak.
+- Test YouTube tidak tampil saat adzan.
+
+---
+
+### Sub-Fitur 29.13.5 Livestream Embed
+
+#### Task Backend
+- Validasi URL livestream.
+- Simpan judul, URL, durasi tampil, dan status aktif.
+
+#### Task Frontend
+- Putar URL livestream memakai pemutar Flutter yang mendukung format stream terpilih.
+- Masukkan dalam rotasi slide.
+- Stop atau sembunyikan saat event sholat.
+
+#### Task Testing
+- Test livestream tampil.
+- Test fallback jika livestream gagal.
+
+---
+
+## 29.14 Fitur: Konten Dakwah Teks
+
+### Sub-Fitur 29.14.1 Ayat Qur'an, Hadits, dan Pesan Dakwah
+
+#### Task Backend
+- Gunakan `media_items` type `text`.
+- Simpan judul, isi teks, sumber, durasi, dan status.
+
+#### Task Frontend
+- Buat form konten teks.
+- Buat tampilan slide teks besar dan kontras.
+- Dukung teks Arab, latin, dan terjemahan.
+
+#### Task Testing
+- Test teks Arab tampil benar.
+- Test sumber tampil.
+- Test konten nonaktif tidak tampil.
+
+---
+
+## 29.15 Fitur: Tabel Informasi
+
+### Sub-Fitur 29.15.1 Builder Tabel Sederhana
+
+#### Task Backend
+- Simpan data tabel sebagai JSON pada `media_items.content` atau tabel terpisah jika diperlukan.
+- Validasi struktur kolom dan baris.
+
+#### Task Frontend
+- Buat UI tambah kolom dan baris.
+- Buat editor isi tabel.
+- Buat preview tabel.
+
+#### Task Testing
+- Test membuat tabel jadwal khutbah.
+- Test membuat tabel kas masjid.
+- Test tabel tampil sebagai slide.
+
+---
+
+## 29.16 Fitur: QR Donasi
+
+### Sub-Fitur 29.16.1 Pengaturan Donasi
+
+#### Task Backend
+- Buat schema `donation_settings`.
+- Buat model `DonationSetting`.
+- Buat CRUD atau single-setting backend function/API handler.
+- Validasi upload QR code.
+
+#### Task Frontend
+- Buat halaman `/admin/donasi`.
+- Buat form judul, deskripsi, nama akun/rekening, dan QR code.
+- Buat preview QR.
+
+#### Task Testing
+- Test upload QR.
+- Test QR tampil di display.
+- Test QR nonaktif tidak tampil.
+
+---
+
+## 29.17 Fitur: Running Text
+
+### Sub-Fitur 29.17.1 Manajemen Running Text
+
+#### Task Backend
+- Buat schema `running_texts`.
+- Buat model `RunningText`.
+- Buat CRUD backend function/API handler.
+- Tambahkan field teks, kecepatan, warna, status, jadwal mulai, dan jadwal selesai.
+
+#### Task Frontend
+- Buat halaman `/admin/running-text`.
+- Buat form running text.
+- Buat preview animasi.
+
+#### Task Testing
+- Test tambah running text.
+- Test running text aktif tampil.
+- Test jadwal tampil running text.
+
+---
+
+### Sub-Fitur 29.17.2 Animasi Running Text
+
+#### Task Frontend
+- Buat komponen `RunningText`.
+- Gunakan animasi CSS yang halus.
+- Atur kecepatan berdasarkan setting.
+- Pastikan teks tidak menutupi jadwal sholat.
+
+#### Task Testing
+- Test animasi berjalan halus.
+- Test teks panjang.
+
+---
+
+## 29.18 Fitur: Agenda dan Hari Besar Islam
+
+### Sub-Fitur 29.18.1 Manajemen Agenda Masjid
+
+#### Task Backend
+- Buat schema `agendas`.
+- Buat model `Agenda`.
+- Buat CRUD backend function/API handler.
+- Field: title, description, starts_at, ends_at, is_active.
+
+#### Task Frontend
+- Buat halaman `/admin/agenda`.
+- Buat form agenda.
+- Tampilkan daftar agenda mendatang.
+
+#### Task Testing
+- Test tambah agenda.
+- Test agenda mendatang tampil.
+
+---
+
+### Sub-Fitur 29.18.2 Notifikasi Hari Besar Islam
+
+#### Task Backend
+- Tambahkan data hari besar Islam manual atau seeder.
+- Kirim hari besar terdekat ke display.
+
+#### Task Frontend
+- Tampilkan notifikasi hari besar Islam pada display.
+- Pastikan tidak mengganggu mode adzan/iqamah.
+
+#### Task Testing
+- Test notifikasi tampil sebelum tanggal acara.
+- Test notifikasi tidak tampil setelah lewat.
+
+---
+
+## 29.19 Fitur: Mode Jum'at
+
+### Sub-Fitur 29.19.1 Pengaturan Mode Jum'at
+
+#### Task Backend
+- Tambahkan setting mode Jum'at.
+- Tambahkan opsi nonaktif iqamah Jum'at.
+- Tambahkan opsi slide khusus khutbah.
+
+#### Task Frontend
+- Buat form setting Jum'at.
+- Buat toggle mode Jum'at.
+- Buat pilihan konten khutbah.
+
+#### Task Testing
+- Test mode Jum'at aktif hanya hari Jumat.
+- Test iqamah Jum'at bisa dinonaktifkan.
+
+---
+
+### Sub-Fitur 29.19.2 Tampilan Khutbah
+
+#### Task Frontend
+- Setelah adzan Jum'at, tampilkan slide khutbah atau pesan khutbah.
+- Sembunyikan running text jika diperlukan.
+- Kembali ke main display setelah durasi selesai.
+
+#### Task Testing
+- Test flow Jumat dari adzan ke khutbah.
+- Test kembali ke display utama.
+
+---
+
+## 29.20 Fitur: Kustomisasi Tema dan Desain
+
+### Sub-Fitur 29.20.1 Tema Dasar
+
+#### Task Backend
+- Buat schema `theme_settings`.
+- Buat model `ThemeSetting`.
+- Buat default theme seeder.
+- Simpan warna utama, sekunder, background, dan teks.
+
+#### Task Frontend
+- Buat halaman `/admin/desain`.
+- Buat color picker.
+- Buat pilihan tema dasar.
+- Buat preview tema.
+
+#### Task Testing
+- Test tema disimpan.
+- Test tema aktif tampil di display.
+
+---
+
+### Sub-Fitur 29.20.2 Layout Config
+
+#### Task Backend
+- Simpan `layout_config` dalam JSON.
+- Validasi struktur JSON agar tidak merusak display.
+
+#### Task Frontend
+- Buat pilihan layout: default, hero image, media focus, minimal.
+- Terapkan layout pada display.
+- Tambahkan tombol reset ke default.
+
+#### Task Testing
+- Test ganti layout.
+- Test reset layout.
+- Test layout tetap responsif.
+
+---
+
+## 29.21 Fitur: Pengelolaan File Upload
+
+### Sub-Fitur 29.21.1 Validasi File
+
+#### Task Backend
+- Buat aturan validasi global untuk image, video, dan audio.
+- Batasi ukuran file sesuai jenis.
+- Normalisasi nama file.
+- Simpan file pada direktori terstruktur.
+
+#### Task Testing
+- Test file valid diterima.
+- Test file berbahaya ditolak.
+- Test ukuran terlalu besar ditolak.
+
+---
+
+### Sub-Fitur 29.21.2 Storage Cleanup
+
+#### Task Backend
+- Hapus file lama saat data diganti atau dihapus.
+- Buat scheduled job cleanup file orphan jika diperlukan.
+
+#### Task Testing
+- Test file lama terhapus setelah diganti.
+- Test file aktif tidak ikut terhapus.
+
+---
+
+## 29.22 Fitur: Error Handling dan Logging
+
+### Sub-Fitur 29.22.1 Log Sinkronisasi
+
+#### Task Backend
+- Buat log untuk sinkronisasi jadwal.
+- Simpan status berhasil/gagal dan pesan error.
+- Tampilkan status terakhir di dashboard.
+
+#### Task Testing
+- Test log berhasil.
+- Test log gagal.
+
+---
+
+### Sub-Fitur 29.22.2 Fallback Display
+
+#### Task Frontend
+- Jika state gagal dimuat, tampilkan data terakhir di memori.
+- Jika media gagal, lanjut ke media berikutnya.
+- Jika audio gagal, tetap tampilkan visual adzan/iqamah.
+
+#### Task Testing
+- Test API state gagal sementara.
+- Test media rusak dilewati.
+
+---
+
+## 29.23 Fitur: Deployment dan Production Readiness
+
+### Sub-Fitur 29.23.1 Environment Setup
+
+#### Task Backend / DevOps
+- Siapkan `.env` local dan production.
+- Set `APP_TIMEZONE=Asia/Jakarta`.
+- Set `APP_LOCALE=id`.
+- Set konfigurasi database PostgreSQL.
+
+#### Task Testing
+- Test koneksi database PostgreSQL Insforge.
+- Test config production tidak debug.
+
+---
+
+### Sub-Fitur 29.23.2 Deployment InsForge dan APK
+
+#### Task DevOps
+- Deploy schema, auth, storage, API/backend function, dan dashboard admin melalui mekanisme resmi InsForge.
+- Konfigurasikan domain produksi dan HTTPS untuk dashboard/API.
+- Build dan distribusikan APK release ke perangkat display.
+
+#### Task Testing
+- Test domain dashboard/API produksi dapat diakses.
+- Test `GET /api/v1/display/state` berjalan.
+- Test upload file mengikuti policy InsForge Storage.
+- Test APK release terpasang dan berjalan fullscreen.
+
+---
+
+## 30. Backlog Prioritas Implementasi
+
+## 30.1 Sprint 1 — Fondasi Aplikasi [SELESAI ✅]
+
+### Tujuan
+Membuat aplikasi dasar siap dikembangkan.
+
+### Task Status
+- [x] Setup Insforge (Baas SDK & Client initialized).
+- [x] Setup project Insforge (`https://2a5hq4xh.ap-southeast.insforge.app`).
+- [x] Setup Flutter (Android TV Fullscreen Display ready).
+- [x] Setup Flutter + Dart.
+- [x] Setup Flutter widget styling (Modern Emerald Dark Theme & Glassmorphism).
+- [x] Setup PostgreSQL bawaan Insforge (Schema & Seeding complete).
+- [x] Konfigurasi local domain & ports (`http://localhost:8080` & `http://localhost:8095`).
+- [x] Buat autentikasi admin (`/api/v1/auth/login` & Web Admin Guard).
+- [x] Buat layout admin dasar (Web Admin Dashboard complete).
+- [x] Buat layout display dasar (Android TV 16:9 Display Layout complete).
+
+### Output
+Aplikasi bisa login admin dan membuka halaman display utama secara realtime. (SELESAI ✅)
+
+---
+
+## 30.2 Sprint 2 — Profil Masjid dan Jadwal Sholat [SELESAI ✅]
+
+### Tujuan
+Menampilkan identitas masjid dan jadwal sholat dasar.
+
+### Task Status
+- [x] Buat tabel profil masjid (`mosque_profiles` di InsForge PostgreSQL DB).
+- [x] Buat halaman profil masjid (Tab Identitas Masjid di Web Admin).
+- [x] Buat upload logo dan background (Upload file ke InsForge S3 Storage).
+- [x] Buat tabel lokasi (`prayer_locations` di InsForge PostgreSQL DB).
+- [x] Buat tabel jadwal sholat (`prayer_schedules` di InsForge PostgreSQL DB).
+- [x] Buat service sinkronisasi jadwal eQuran.id (`Kota Padang`, memakai kode lokasi eQuran.id yang aktif).
+- [x] Buat halaman pengaturan jadwal sholat (Pilihan kota & tombol manual sync di Web Admin).
+- [x] Tampilkan jadwal di display (Card Jadwal Sholat Imsak, Subuh, Syuruq, Dzuhur, Ashar, Maghrib, Isya di TV Display).
+
+### Output
+Display menampilkan profil masjid dan jadwal sholat sesuai lokasi. (SELESAI ✅)
+
+---
+
+## 30.3 Sprint 3 — Jam Digital, Koreksi, dan Countdown [SELESAI ✅]
+
+### Tujuan
+Membuat display utama berfungsi secara real-time.
+
+### Task Status
+- [x] Buat komponen jam digital (Jam digital realtime `HH:mm:ss` ShareTechMono di TV Display).
+- [x] Buat tanggal Masehi (Display tanggal Masehi lengkap Bahasa Indonesia).
+- [x] Buat tanggal Hijriyah (Display penanggalan Hijriyah otomatis `19 Safar 1448 H` + koreksi hari).
+- [x] Buat koreksi waktu sholat (Koreksi offset menit per waktu sholat di Web Admin & backend `getCorrectedSchedule()`).
+- [x] Buat highlight waktu sholat berikutnya (Highlight emas & glowing border pada kartu sholat terdekat).
+- [x] Buat countdown menuju waktu berikutnya (Timer hitung mundur `HH:mm:ss` realtime).
+- [x] Buat endpoint `/display/state` (Endpoint publik `/api/v1/display/state` di backend server).
+- [x] Buat polling state (Polling loop 10 detik di Flutter `ApiService.fetchDisplayState()`).
+
+### Output
+Display utama berjalan real-time dengan countdown. (SELESAI ✅)
+
+---
+
+## 30.4 Sprint 4 — Adzan dan Iqamah [SELESAI ✅]
+
+### Tujuan
+Membuat rangkaian adzan dan iqamah otomatis.
+
+### Task Status
+- [x] Buat pengaturan audio adzan (Form Pengaturan Audio & Notifikasi Adzan di Web Admin).
+- [x] Buat layar adzan (`AdzanOverlay` fullscreen visual adzan).
+- [x] Buat upload audio adzan (Upload file audio adzan/murottal MP3 ke InsForge S3 Storage).
+- [x] Buat pengaturan iqamah (Form Durasi & Status Iqamah per waktu sholat di Web Admin).
+- [x] Buat layar countdown iqamah (`IqamahOverlay` countdown iqamah `mm:ss` & himbauan rapadkan shaf).
+- [x] Buat state engine display (`DisplayModeEngine` auto-switch: Normal -> Adzan -> Iqamah -> Normal).
+- [x] Test flow waktu sholat (Demo Control Panel interaktif untuk pengujian simulasi transisi layar adzan & iqamah).
+
+### Output
+Saat waktu sholat tiba, display berubah ke adzan lalu iqamah. (SELESAI ✅)
+
+---
+
+## 30.5 Sprint 5 — Running Text dan Slide Gambar
+
+### Tujuan
+Menambahkan pengumuman dasar.
+
+### Task
+- Buat tabel running text.
+- Buat halaman running text.
+- Buat komponen running text.
+- Buat tabel media items.
+- Buat upload gambar.
+- Buat slider gambar.
+- Pause slider saat adzan/iqamah.
+
+### Output
+Display menampilkan running text dan slide gambar.
+
+---
+
+## 30.6 Sprint 6 — Donasi, Tema, dan Mode Jum'at
+
+### Tujuan
+Melengkapi MVP.
+
+### Task
+- Buat pengaturan QR donasi.
+- Tampilkan QR donasi di display.
+- Buat pengaturan tema dasar.
+- Terapkan tema pada display.
+- Buat pengaturan mode Jum'at.
+- Buat flow Jum'at tanpa iqamah.
+- Buat slide/pesan khutbah.
+
+### Output
+MVP siap digunakan di masjid.
+
+---
+
+## 30.7 Sprint 7 — Multimedia Lanjutan
+
+### Tujuan
+Menambahkan konten video dan audio lanjutan.
+
+### Task
+- Tambah upload video lokal.
+- Tambah YouTube embed.
+- Tambah livestream embed.
+- Tambah murottal sebelum adzan.
+- Tambah dzikir pagi dan petang.
+- Tambah kontrol volume.
+
+### Output
+Display mendukung multimedia lanjutan.
+
+---
+
+## 30.8 Sprint 8 — Konten Dakwah, Tabel, dan Agenda
+
+### Tujuan
+Melengkapi fitur informasi masjid.
+
+### Task
+- Buat konten ayat/hadits.
+- Buat builder tabel informasi.
+- Buat agenda masjid.
+- Buat notifikasi hari besar Islam.
+- Buat rotasi konten berdasarkan jadwal aktif.
+
+### Output
+Aplikasi dapat menampilkan informasi dakwah dan agenda secara lengkap.
+
+---
+
+## 30.9 Sprint 9 — Stabilitas dan Production Readiness
+
+### Tujuan
+Menyiapkan aplikasi untuk produksi.
+
+### Task
+- Optimasi performa display.
+- Tambah fallback jadwal jika API gagal.
+- Tambah error logging.
+- Test display 24 jam.
+- Test responsive di TV.
+- Setup Insforge production.
+- Deploy backend/API melalui mekanisme resmi InsForge.
+- Setup HTTPS.
+- Jalankan schema production.
+- Build APK release.
+
+### Output
+Aplikasi siap deploy ke `https://masjid.alihdayahsiteba.web.id`.
+
+---
+
+## 31. Checklist MVP
+
+Gunakan checklist ini untuk memastikan MVP selesai.
+
+### Admin
+- [ ] Admin dapat login.
+- [ ] Admin dapat logout.
+- [ ] Admin dapat mengubah profil masjid.
+- [ ] Admin dapat upload logo.
+- [ ] Admin dapat upload background.
+- [ ] Admin dapat memilih lokasi jadwal sholat.
+- [ ] Admin dapat sinkronisasi jadwal.
+- [ ] Admin dapat koreksi waktu sholat.
+- [ ] Admin dapat mengatur iqamah.
+- [ ] Admin dapat membuat running text.
+- [ ] Admin dapat upload slide gambar.
+- [ ] Admin dapat mengatur QR donasi.
+- [ ] Admin dapat mengatur tema dasar.
+- [ ] Admin dapat mengatur mode Jum'at.
+
+### Display
+- [ ] Display dapat dibuka di `/display`.
+- [ ] Jam digital berjalan real-time.
+- [ ] Tanggal Masehi tampil.
+- [ ] Tanggal Hijriyah tampil.
+- [ ] Jadwal sholat tampil.
+- [ ] Waktu sholat berikutnya ter-highlight.
+- [ ] Countdown waktu berikutnya tampil.
+- [ ] Layar adzan tampil otomatis.
+- [ ] Audio adzan diputar.
+- [ ] Countdown iqamah tampil.
+- [ ] Running text berjalan.
+- [ ] Slide gambar tampil.
+- [ ] QR donasi tampil jika aktif.
+- [ ] Mode Jum'at berjalan.
+
+### Teknis
+- [ ] Database schema tersedia.
+- [ ] Seeder default tersedia.
+- [ ] Upload storage public berjalan.
+- [ ] Endpoint `GET /api/v1/display/state` berjalan.
+- [ ] UI berbahasa Indonesia.
+- [ ] Timezone Asia/Jakarta.
+- [ ] Build APK release berhasil.
+- [ ] Konfigurasi production Insforge siap.
+
+---
+
+## 32. Task Teknis Awal untuk Antigravity
+
+Jalankan implementasi awal dengan urutan berikut:
+
+```txt
+1. Gunakan project InsForge untuk `/home/naval/www/masjid.test/mobile`
+2. Konfigurasikan PostgreSQL, Auth, dan Storage bawaan InsForge
+3. Pasang Flutter + Dart
+4. Pasang Flutter widget styling
+5. Buat auth admin
+6. Buat schema profil masjid
+7. Buat schema lokasi dan jadwal sholat
+8. Buat schema koreksi waktu
+9. Buat schema iqamah
+10. Buat schema media_items
+11. Buat schema running_texts
+12. Buat schema audio_settings
+13. Buat schema donation_settings
+14. Buat schema theme_settings
+15. Buat seeder default
+16. Buat halaman admin profil masjid
+17. Buat halaman admin jadwal sholat
+18. Buat halaman admin iqamah
+19. Buat halaman display utama
+20. Buat endpoint display state
+21. Buat komponen DigitalClock
+22. Buat komponen PrayerCard
+23. Buat komponen AdzanScreen
+24. Buat komponen IqamahCountdown
+25. Buat komponen RunningText
+26. Buat komponen MediaSlider
+27. Buat komponen DonationQr
+28. Test flow display dari main ke adzan lalu iqamah
+29. Build APK release
+30. Siapkan konfigurasi Insforge production
+```
+
+
+---
+
+## 33. Catatan Perubahan Stack Terbaru
+
+PRD ini telah dibersihkan dari stack lama. Stack final yang digunakan adalah:
+
+- **Frontend:** Flutter
+- **Output:** APK Android
+- **Backend:** Insforge
+- **Database:** PostgreSQL bawaan Insforge
+- **Storage:** Insforge Storage
+
+Istilah dan perintah dari stack web lama—termasuk PHP, dependency manager PHP, server block manual, dan route display berbasis browser—bukan bagian stack final.
+
+---
+
+## 34. Revisi Stack Final: Flutter + Insforge + PostgreSQL
+
+PRD ini direvisi dengan stack final berikut:
+
+| Komponen | Stack Final |
+|---|---|
+| Frontend display | Flutter |
+| Output frontend | APK Android |
+| Backend | Insforge |
+| Database | PostgreSQL bawaan Insforge |
+| Storage | Insforge Storage / storage bawaan Insforge |
+| API | API/backend logic dari Insforge |
+| Target perangkat | Android TV, Android Box, tablet Android, atau perangkat Android lain |
+
+### Perubahan dari Versi Sebelumnya
+- Backend framework web lama dihapus dari rencana stack utama; InsForge tetap menjadi backend final.
+- Database manual PostgreSQL diganti menjadi PostgreSQL bawaan InsForge.
+- Deployment backend dilakukan melalui mekanisme resmi InsForge, tanpa perintah PHP atau server block manual.
+- Flutter tetap menjadi aplikasi display utama dalam bentuk APK.
+- Dashboard admin dan API disesuaikan dengan kemampuan Insforge.
+
+### Implikasi Implementasi
+- Semua tabel seperti `mosque_profiles`, `prayer_schedules`, `media_items`, `running_texts`, `audio_settings`, dan `theme_settings` dibuat sebagai tabel PostgreSQL di Insforge.
+- Flutter mengambil data melalui API Insforge.
+- Upload logo, background, media, audio, dan QR donasi menggunakan storage Insforge.
+- Autentikasi admin menggunakan fitur auth Insforge jika tersedia.
+- Sinkronisasi jadwal shalat dari eQuran.id dapat dibuat sebagai scheduled backend function, cron job eksternal, atau endpoint manual yang dipicu admin.
+
+### Task Revisi Stack
+```txt
+1. Setup project Insforge.
+2. Aktifkan PostgreSQL bawaan Insforge.
+3. Buat schema database PostgreSQL sesuai PRD.
+4. Setup storage Insforge untuk media dan audio.
+5. Buat autentikasi admin menggunakan Insforge Auth.
+6. Buat API display state.
+7. Buat API profil masjid.
+8. Buat API jadwal sholat.
+9. Buat API koreksi waktu sholat.
+10. Buat API iqamah.
+11. Buat API running text.
+12. Buat API media.
+13. Buat API audio.
+14. Buat API tema.
+15. Buat API QR donasi.
+16. Setup project Flutter.
+17. Hubungkan Flutter ke API Insforge.
+18. Buat cache lokal Flutter.
+19. Build APK release.
+20. Deploy backend Insforge production.
+```
+
+
+---
+
+## 35. Revisi Sumber API Jadwal Shalat
+
+Sumber API jadwal shalat final adalah **eQuran.id API Shalat**:
+
+```txt
+https://equran.id/apidev/shalat
+```
+
+### Keputusan Final
+- Tidak menggunakan API Kemenag RI sebagai sumber utama.
+- Gunakan endpoint jadwal shalat dari eQuran.id.
+- Data kota/kabupaten mengikuti format dan kode lokasi dari eQuran.id.
+- Jadwal yang diambil dari eQuran.id tetap disimpan ke database PostgreSQL Insforge sebagai cache.
+- Koreksi manual waktu shalat tetap diterapkan setelah data jadwal diterima dari eQuran.id.
+
+### Task Revisi API Shalat
+```txt
+1. Baca dokumentasi https://equran.id/apidev/shalat.
+2. Buat service API client eQuran Shalat di backend Insforge.
+3. Buat tabel lokasi berdasarkan kode kota/kabupaten eQuran.id.
+4. Buat sinkronisasi jadwal harian/bulanan dari eQuran.id.
+5. Simpan hasil jadwal ke PostgreSQL Insforge.
+6. Terapkan cache fallback jika API eQuran.id gagal.
+7. Terapkan koreksi manual waktu shalat setelah jadwal dari eQuran.id diproses.
+8. Update Flutter agar membaca jadwal hasil sinkronisasi dari API backend Insforge.
+```
+
+
+---
+
+## 36. Stack Final Bersih
+
+Dokumen ini menggunakan stack final berikut:
+
+| Komponen | Stack |
+|---|---|
+| Aplikasi display | Flutter |
+| Output aplikasi | APK Android |
+| Backend | Insforge |
+| Database | PostgreSQL bawaan Insforge |
+| Storage | Insforge Storage |
+| API | Backend/API Insforge |
+
+Semua bagian implementasi, deployment, workflow, fitur, sub-fitur, dan task mengacu pada stack final di atas.

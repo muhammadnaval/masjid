@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timer Adzan — Pengaturan</title>
+<style>
+  :root{
+    --bg:#0B0F17; --bg2:#0F172A; --card:#111827; --line:#1F2937;
+    --text:#E5E7EB; --muted:#94A3B8; --pri:#10B981; --pri2:#2DD4BF;
+    --warn:#F59E0B; --warn2:#D97706; --err:#EF4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#0F172A 0%,var(--bg) 60%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px}
+  .wrap{width:100%;max-width:720px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+  .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(16,185,129,.45)}
+  h1{font-size:20px;margin:0;letter-spacing:.2px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .countdown-layout{display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:center;margin-top:18px}
+  .countdown-ring{--progress:0%;--ring:var(--pri2);position:relative;width:220px;height:220px;border-radius:50%;background:conic-gradient(var(--ring) var(--progress),#243044 0);display:grid;place-items:center;box-shadow:0 0 34px rgba(45,212,191,.2);transition:background .3s,box-shadow .3s}
+  .countdown-ring::before{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--card)}
+  .countdown-core{position:relative;text-align:center}
+  .countdown-time{font-size:54px;line-height:1;font-weight:800;letter-spacing:2px;font-variant-numeric:tabular-nums}
+  .countdown-unit{color:var(--muted);font-size:12px;margin-top:8px;letter-spacing:1.5px;text-transform:uppercase}
+  .countdown-label{color:var(--muted);font-size:12px;letter-spacing:1.5px}
+  .countdown-prayer{font-size:32px;font-weight:800;letter-spacing:1px;margin:5px 0 18px}
+  .countdown-target{display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;color:var(--muted);font-size:14px}
+  .countdown-target strong{color:var(--text);font-size:20px;font-variant-numeric:tabular-nums}
+  .countdown-hint{color:var(--muted);font-size:13px;margin-top:14px}
+  .countdown-ring.urgent{--ring:var(--warn);box-shadow:0 0 42px rgba(245,158,11,.35);animation:pulse 1s ease-in-out infinite alternate}
+  @keyframes pulse{to{filter:brightness(1.15)}}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+  input[type=email],input[type=password],input[type=number]{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:15px;outline:none}
+  input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row>div{flex:1}
+  button{cursor:pointer;border:0;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:600;color:#04121A;background:linear-gradient(135deg,var(--pri),var(--pri2));transition:transform .05s,filter .15s}
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  button.warn{background:linear-gradient(135deg,var(--warn),var(--warn2));color:#1A1206}
+  button.danger{background:transparent;color:var(--err);border:1px solid #3F1D1D}
+  .btns{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .msg{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:14px;display:none}
+  .msg.ok{display:block;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);color:#6EE7B7}
+  .msg.err{display:block;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#FCA5A5}
+  .prayer-row{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .prayer-row:last-child{border-bottom:0}
+  .prayer-row .name{font-weight:600;letter-spacing:.5px}
+  .prayer-row input{text-align:center}
+  .clear{background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 0;font-size:13px;border-radius:8px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .head-row{display:flex;justify-content:space-between;align-items:center}
+  .badge{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+  .hidden{display:none!important}
+  a{color:var(--pri2);text-decoration:none}
+  footer{color:var(--muted);font-size:12px;margin-top:24px;text-align:center}
+  @media(max-width:600px){.countdown-layout{grid-template-columns:1fr;justify-items:center}.countdown-layout>div:last-child{width:100%}.countdown-prayer{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">⏱</div>
+    <div>
+      <h1>Timer Hitung Mundur Adzan</h1>
+      <div class="sub">Atur durasi countdown menjelang adzan per waktu shalat</div>
+    </div>
+  </header>
+
+  <section class="card" id="loginCard">
+    <div class="head-row">
+      <h2 style="margin:0;font-size:17px">Login Admin</h2>
+      <span class="badge">InsForge Auth</span>
+    </div>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" placeholder="admin@masjid.id">
+    <label for="password">Password</label>
+    <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+    <div class="btns">
+      <button id="loginBtn">Masuk</button>
+    </div>
+    <div class="msg" id="loginMsg"></div>
+  </section>
+
+  <section class="card hidden" id="dashboardCard">
+    <div class="head-row">
+      <div>
+        <h2 s</div>tyle="margin:0;font-size:17px">Dashboard Countdown</h2>
+        <div class="sub">Pantau timer 5 menit menjelang adzan</div>
+      </div>
+      <span class="badge" id="countdownStatus" role="status">Memuat…</span>
+    </div>
+    <div class="countdown-layout">
+      <div class="countdown-ring" id="countdownRing">
+        <div class="countdown-core">
+          <div class="countdown-time" id="countdownTime" aria-live="polite">--:--</div>
+          <div class="countdown-unit">menuju adzan</div>
+        </div>
+      </div>
+      <div>
+        <div class="countdown-label">W</div>AKTU SHALAT</div>
+        <div class="countdown-prayer" id="countdownPrayer">—</div>
+        <div class="countdown-target"><span>Waktu adzan</span><strong id="countdownTarget">—</strong></</span>div>
+        <div class="countdown-hint" id="countdownHint">Memuat jadwal shalat…</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="settingCard">
+    <div class="head-row">
+      <h2 style="margin:0;font-size:17px">Durasi Countdown</h2>
+      <button class="danger" id="logoutBtn">Keluar</button>
+    </div>
+
+    <label for="defaultMinutes">Durasi Default (menit)</label>
+    <div class="row">
+      <div><input type="number" id="defaultMinutes" min="1" max="30" value="5"></div>
+      <div style="flex:0 0 auto"><button class="ghost" id="resetDefaultBtn" title="Kembalikan ke 5">↺ 5</button></div>
+    </div>
+    <div class="hint">Rentang 1–30 menit. Dipakai untuk waktu shalat tanpa override.</div>
+
+    <label>Override per Waktu Shalat</label>
+    <div id="prayerList"></div>
+    <div class="hint">Kosongkan untuk memakai durasi default. Beep otomatis 10 detik terakhir.</div>
+
+    <div class="btns">
+      <button id="saveBtn">Simpan</button>
+      <button class="ghost" id="reloadBtn">Muat Ulang</button>
+    </div>
+    <div class="msg" id="settingMsg"></div>
+  </section>
+
+  <footer>Backend InsForge · masjid-backend · <a id="openApi" href="#">API state</a></footer>
+</div>
+
+<script>
+(function(){
+  var PRAYERS = [
+    ['imsak','IMSAK'], ['subuh','SUBUH'], ['syuruq','SYURUQ'],
+    ['dzuhur','DZUHUR'], ['jumat',"JUM'AT"], ['ashar','ASHAR'],
+    ['maghrib','MAGHRIB'], ['isya','ISYA']
+  ];
+  var TOKEN_KEY = 'masjid_admin_token';
+  var base = 'https://2a5hq4xh.insforge.site';
+  var COUNTDOWN_PRAYERS = [
+    ['imsak','IMSAK'], ['subuh','SUBUH'], ['syuruq','SYURUQ'],
+    ['dzuhur','DZUHUR'], ['ashar','ASHAR'], ['maghrib','MAGHRIB'], ['isya','ISYA']
+  ];
+  var displayState = null;
+  var countdownSettings = {defaultMinutes:5, perPrayer:{}};
+  var displayError = '';
+  var stateTimer = null;
+  var tickTimer = null;
+  function api(route, opts){ opts = opts||{}; var h = opts.headers||{}; var t = localStorage.getItem(TOKEN_KEY); if(t) h['Authorization'] = 'Bearer '+t; return fetch(base+route, {method:opts.method||'GET', headers:h, body:opts.body?JSON.stringify(opts.body):null}); }
+  function $(id){ return document.getElementById(id); }
+  function showMsg(el, text, kind){ el.className = 'msg '+(kind||'ok'); el.textContent = text; }
+  function clearMsg(el){ el.className = 'msg'; el.textContent=''; }
+
+  function renderPrayers(perPrayer){
+    var list = $('prayerList'); list.innerHTML='';
+    PRAYERS.forEach(function(p){
+      var key=p[0], label=p[1];
+      var row=document.createElement('div'); row.className='prayer-row';
+      var n=document.createElement('div'); n.className='name'; n.textContent=label;
+      var inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.max='30'; inp.placeholder='default'; inp.dataset.key=key;
+      var v = perPrayer && perPrayer[key]; if(v!=null) inp.value=v;
+      var clr=document.createElement('button'); clr.className='clear'; clr.textContent='×'; clr.title='Kosongkan';
+      clr.onclick=function(){ inp.value=''; inp.focus(); };
+      row.appendChild(n); row.appendChild(inp); row.appendChild(clr); list.appendChild(row);
+    });
+  }
+
+  function wallNow(){
+    var parts = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'}).formatToParts(new Date());
+    var p={}; parts.forEach(function(x){ if(x.type!=='literal') p[x.type]=x.value; });
+    return {date:p.year+'-'+p.month+'-'+p.day, ms:Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)};
+  }
+  function pad(n){ return n<10?'0'+n:String(n); }
+  function parsePrayerTime(date, value){
+    var d=String(date||'').match(/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/), v=String(value||'').match(/^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?/);
+    if(!d||!v) return null;
+    var h=+v[1], m=+v[2], s=+(v[3]||0); if(h>23||m>59||s>59) return null;
+    return {ms:Date.UTC(+d[1],+d[2]-1,+d[3],h,m,s), clock:pad(h)+':'+pad(m)};
+  }
+  function countdownMinutes(settings, key){
+    var per=settings&&settings.perPrayer||{};
+    var value=Object.prototype.hasOwnProperty.call(per,key)?Number(per[key]):Number(settings&&settings.defaultMinutes);
+    return isFinite(value)&&value>0?value:0;
+  }
+  console.assert(parsePrayerTime('2026-08-05','05:04') && countdownMinutes({defaultMinutes:5,perPrayer:{imsak:0}},'imsak')===0, 'Countdown self-check failed');
+
+  function countdownModel(){
+    var schedule=displayState&&(displayState.todaySchedule||displayState.rawSchedule), settings=displayState&&displayState.countdownSettings||countdownSettings;
+    if(!schedule||!schedule.date) return null;
+    var now=wallNow(), active=null, next=null;
+    for(var i=0;i<COUNTDOWN_PRAYERS.length;i++){
+      var key=COUNTDOWN_PRAYERS[i][0], time=parsePrayerTime(schedule.date,schedule[key]), minutes=countdownMinutes(settings,key);
+      if(!time||!minutes) continue;
+      var item={key:key,label:COUNTDOWN_PRAYERS[i][1],time:time,minutes:minutes,start:time.ms-minutes*60000,duration:minutes*60000};
+      if(!next&&time.ms>now.ms) next=item;
+      if(now.ms>=item.start&&now.ms<time.ms){ active=item; break; }
+    }
+    return {active:active,next:next,now:now};
+  }
+  function formatRemaining(ms){ var total=Math.max(0,Math.ceil(ms/1000)), min=Math.floor(total/60), sec=total%60; return pad(min)+':'+pad(sec); }
+  function renderCountdown(){
+    var ring=$('countdownRing'); if(!ring) return;
+    if(displayError){ $('countdownStatus').textContent='GAGAL MEMUAT'; $('countdownTime').textContent='--:--'; $('countdownPrayer').textContent='—'; $('countdownTarget').textContent='—'; $('countdownHint').textContent=displayError; ring.style.setProperty('--progress','0%'); return; }
+    if(!displayState){ $('countdownStatus').textContent='MEMUAT'; return; }
+    var model=countdownModel(); ring.classList.remove('urgent');
+    if(!model||(!model.active&&!model.next)){
+      $('countdownStatus').textContent='TIDAK AKTIF'; $('countdownTime').textContent='--:--'; $('countdownPrayer').textContent='—'; $('countdownTarget').textContent='—'; $('countdownHint').textContent='Jadwal berikutnya belum tersedia.'; ring.style.setProperty('--progress','0%'); return;
+    }
+    if(model.active){
+      var remaining=model.active.time.ms-model.now.ms;
+      $('countdownStatus').textContent=remaining<=10000?'10 DETIK TERAKHIR':'COUNTDOWN AKTIF'; $('countdownTime').textContent=formatRemaining(remaining); $('countdownPrayer').textContent=model.active.label; $('countdownTarget').textContent=model.active.time.clock; $('countdownHint').textContent=remaining<=10000?'Beep aktif menjelang adzan.':'Countdown aktif sejak '+model.active.minutes+' menit sebelum adzan.'; ring.style.setProperty('--progress',Math.max(0,Math.min(100,Math.round(remaining/model.active.duration*100)))+'%'); if(remaining<=10000) ring.classList.add('urgent');
+    }else{
+      $('countdownStatus').textContent='MENUNGGU'; $('countdownTime').textContent='--:--'; $('countdownPrayer').textContent=model.next.label; $('countdownTarget').textContent=model.next.time.clock; $('countdownHint').textContent='Aktif mulai '+formatClock(model.next.start)+'.'; ring.style.setProperty('--progress','0%');
+    }
+  }
+  function formatClock(ms){ var d=new Date(ms); return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes()); }
+  function loadDisplayState(){
+    api('/api/v1/display/state').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }).then(function(j){ if(j.status&&j.status!=='success') throw new Error(j.message||'Respons API tidak valid'); displayState=j.data||j; if(!displayState.countdownSettings) displayState.countdownSettings=countdownSettings; displayError=''; renderCountdown(); }).catch(function(e){ displayError='Koneksi countdown gagal: '+(e&&e.message||e); renderCountdown(); });
+  }
+  function stopCountdown(){ if(stateTimer) clearInterval(stateTimer); if(tickTimer) clearInterval(tickTimer); stateTimer=null; tickTimer=null; displayState=null; displayError=''; }
+  function startCountdown(){ stopCountdown(); loadDisplayState(); tickTimer=setInterval(renderCountdown,1000); stateTimer=setInterval(loadDisplayState,30000); }
+
+  function toLogin(){ stopCountdown(); $('dashboardCard').classList.add('hidden'); $('settingCard').classList.add('hidden'); $('loginCard').classList.remove('hidden'); $('password').value=''; }
+  function toSettings(){ $('loginCard').classList.add('hidden'); $('dashboardCard').classList.remove('hidden'); $('settingCard').classList.remove('hidden'); loadSettings(); startCountdown(); }
+
+  function loadSettings(){
+    clearMsg($('settingMsg'));
+    api('/api/v1/admin/countdown-settings').then(function(r){ return r.json(); }).then(function(j){
+      if(j.status!=='success'){ showMsg($('settingMsg'), (j&&j.message)||'Gagal memuat', 'err'); return; }
+      var d = j.data||{}; var cs = d.countdownSettings||d;
+      countdownSettings = {defaultMinutes:cs.defaultMinutes!=null?cs.defaultMinutes:5, perPrayer:cs.perPrayer||{}};
+      if(displayState) displayState.countdownSettings=countdownSettings;
+      $('defaultMinutes').value = countdownSettings.defaultMinutes;
+      renderPrayers(countdownSettings.perPrayer);
+      renderCountdown();
+    }).catch(function(e){ showMsg($('settingMsg'),'Koneksi gagal: '+(e&&e.message||e), 'err'); });
+  }
+
+  function collect(){
+    var body = { defaultMinutes: parseInt($('defaultMinutes').value,10), perPrayer:{} };
+    if(!body.defaultMinutes || body.defaultMinutes<1 || body.defaultMinutes>30) return null;
+    var inputs = document.querySelectorAll('#prayerList input');
+    inputs.forEach(function(inp){
+      var v = inp.value.trim();
+      if(v!==''){ var n=parseInt(v,10); if(n>=0&&n<=30) body.perPrayer[inp.dataset.key]=n; }
+    });
+    return body;
+  }
+
+  function save(){
+    clearMsg($('settingMsg'));
+    var body = collect();
+    if(!body){ showMsg($('settingMsg'),'Periksa input: default 1–30 menit.', 'err'); return; }
+    $('saveBtn').disabled=true; $('saveBtn').textContent='Menyimpan…';
+    api('/api/v1/admin/countdown-settings', {method:'PUT', headers:{'Content-Type':'application/json'}, body:body}).then(function(r){ return r.json(); }).then(function(j){
+      if(j.status==='success'){ showMsg($('settingMsg'), j.message||'Tersimpan'); }
+      else { showMsg($('settingMsg'), (j&&j.message)||'Gagal menyimpan', 'err'); }
+    }).catch(function(e){ showMsg($('settingMsg'),'Koneksi gagal: '+(e&&e.message||e), 'err'); })
+    .finally(function(){ $('saveBtn').disabled=false; $('saveBtn').textContent='Simpan'; });
+  }
+
+  function login(){
+    clearMsg($('loginMsg'));
+    var email=$('email').value.trim(); var pw=$('password').value;
+    if(!email||!pw){ showMsg($('loginMsg'),'Email dan password wajib diisi','err'); return; }
+    $('loginBtn').disabled=true; $('loginBtn').textContent='Memuat…';
+    fetch(base+'/api/v1/admin/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:email,password:pw})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j.status==='success' && j.data && j.data.token){ localStorage.setItem(TOKEN_KEY, j.data.token); toSettings(); }
+        else { showMsg($('loginMsg'), (j&&j.message)||'Login gagal', 'err'); }
+      })
+      .catch(function(e){ showMsg($('loginMsg'),'Koneksi gagal: '+(e&&e.message||e), 'err'); })
+      .finally(function(){ $('loginBtn').disabled=false; $('loginBtn').textContent='Masuk'; });
+  }
+
+  $('loginBtn').onclick=login;
+  $('password').addEventListener('keydown', function(e){ if(e.key==='Enter') login(); });
+  $('saveBtn').onclick=save;
+  $('reloadBtn').onclick=loadSettings;
+  $('logoutBtn').onclick=function(){ localStorage.removeItem(TOKEN_KEY); toLogin(); };
+  $('resetDefaultBtn').onclick=function(){ $('defaultMinutes').value=5; };
+  $('openApi').href = base+'/api/v1/display/state';
+
+  if(localStorage.getItem(TOKEN_KEY)){ toSettings(); } else { toLogin(); }
+})();
+</script>
+</body>
+</html>
+
