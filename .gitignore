@@ -17,3 +17,4 @@
 # Portal workspace & superpowers artifacts
 .workspaces
 .superpowers
+.worktrees
