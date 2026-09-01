@@ -17,19 +17,16 @@
                 <div><h2 class="text-sm font-bold text-white">Masjid Display</h2><span class="text-[11px] text-emerald-400 font-semibold">Panel Admin</span></div>
             </div>
             <nav class="space-y-1">
-                @php($navItems = [
-                    ['route'=>'admin.dashboard','label'=>'Dashboard'], ['route'=>'admin.profile.edit','label'=>'Profil Masjid'],
-                    ['route'=>'admin.schedule.index','label'=>'Jadwal Sholat'], ['route'=>'admin.iqamah.edit','label'=>'Iqamah'],
-                    ['route'=>'admin.syuruq.edit','label'=>'Syuruq'], ['route'=>'admin.audio.edit','label'=>'Audio'],
-                    ['route'=>'admin.media.index','label'=>'Slide & Media'], ['route'=>'admin.donation.edit','label'=>'QR Donasi'],
-                    ['route'=>'admin.running-text.index','label'=>'Running Text'], ['route'=>'admin.agenda.index','label'=>'Agenda'],
-                    ['route'=>'admin.theme.edit','label'=>'Tema & Desain'], ['route'=>'admin.hijri.edit','label'=>'Hijriyah'],
-                    ['route'=>'admin.countdown.edit','label'=>'Countdown'], ['route'=>'admin.friday.edit','label'=>'Jumat'],
-                    ['route'=>'admin.account.edit','label'=>'Akun'],
-                ])
-                @foreach($navItems as $item)
-                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition {{ request()->routeIs($item['route']) ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
-                        <span>{{ $item['label'] }}</span>
+                @php
+                    $currentSlug = request()->route('page') ?? '';
+                    $isDashboard = request()->routeIs('admin.dashboard');
+                @endphp
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition {{ $isDashboard ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
+                    <span>Dashboard</span>
+                </a>
+                @foreach(['profile' => 'Profil Masjid', 'schedule' => 'Jadwal Sholat', 'iqamah' => 'Iqamah', 'syuruq' => 'Syuruq', 'audio' => 'Audio', 'media' => 'Slide & Media', 'donation' => 'QR Donasi', 'running-text' => 'Running Text', 'agenda' => 'Agenda', 'theme' => 'Tema & Desain', 'hijri' => 'Hijriyah', 'countdown' => 'Countdown', 'friday' => 'Jumat', 'account' => 'Akun'] as $slug => $label)
+                    <a href="{{ route('admin.page.edit', $slug) }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition {{ $currentSlug === $slug ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
+                        <span>{{ $label }}</span>
                     </a>
                 @endforeach
             </nav>

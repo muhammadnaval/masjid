@@ -17,7 +17,7 @@ class DonationSettingController extends Controller
         $donation = DonationSetting::first() ?? DonationSetting::create([
             'title'          => 'Infaq & Sedekah Operasional Masjid',
             'description'    => 'Salurkan infaq dan sedekah terbaik Anda untuk memakmurkan masjid dan kegiatan dakwah.',
-            'qr_code_path'   => 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://masjid.test/donasi',
+            'qr_code_path'   => 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='.urlencode(env('APP_URL','https://masjidnew.test').'/donasi'),
             'bank_name'      => 'Bank Syariah Indonesia (BSI)',
             'account_name'   => 'Masjid Al-Hidayah Siteba',
             'account_number' => '7123-4567-8901',
