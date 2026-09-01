@@ -313,6 +313,27 @@
         <p class="text-slate-500 text-sm">Belum ada jadwal.</p>
         @endif
     </div>
+
+    {{-- Sync Button --}}
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl" x-data="{ syncing: false }">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-emerald-400">Sinkronisasi Jadwal</h3>
+                <p class="text-xs text-slate-400 mt-1">Ambil jadwal terbaru dari Kemenag RI ({{ $activeLocation->city_name ?? '-' }})</p>
+                @if($lastSync)
+                <p class="text-xs text-slate-500 mt-1">Terakhir: {{ \Carbon\Carbon::parse($lastSync->created_at)->locale('id')->diffForHumans() }} — <span class="{{ $lastSync->status === 'success' ? 'text-emerald-400' : 'text-red-400' }}">{{ $lastSync->status === 'success' ? 'Berhasil' : 'Gagal' }}</span></p>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('admin.schedule.sync') }}" x-on:submit="syncing = true">
+                @csrf
+                <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition disabled:opacity-50" :disabled="syncing">
+                    <span x-show="!syncing">🔄 Sinkronisasi</span>
+                    <span x-show="syncing" x-cloak><svg class="animate-spin h-4 w-4 inline" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Menyinkronkan...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
         <h3 class="text-sm font-bold text-emerald-400 mb-4">Koreksi Waktu (menit)</h3>
         <form method="POST" action="{{ route('admin.page.save', 'schedule') }}" class="space-y-4">
