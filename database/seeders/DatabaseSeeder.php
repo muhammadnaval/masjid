@@ -2,19 +2,20 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
+use App\Models\Agenda;
+use App\Models\CountdownSetting;
+use App\Models\DonationSetting;
+use App\Models\IqamahSetting;
+use App\Models\MediaItem;
 use App\Models\MosqueProfile;
 use App\Models\PrayerLocation;
 use App\Models\PrayerSchedule;
 use App\Models\PrayerTimeCorrection;
-use App\Models\IqamahSetting;
-use App\Models\MediaItem;
 use App\Models\RunningText;
-use App\Models\AudioSetting;
-use App\Models\DonationSetting;
+use App\Models\SyuruqSetting;
 use App\Models\ThemeSetting;
-use App\Models\Agenda;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -27,6 +28,15 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Pengurus Utama Masjid',
                 'password' => Hash::make('Member23!$'),
+            ]
+        );
+
+        // 1b. Admin User (Laravel migration admin)
+        User::firstOrCreate(
+            ['email' => 'admin@masjid.test'],
+            [
+                'name' => 'Pengurus Masjid',
+                'password' => Hash::make('admin123'),
             ]
         );
 
@@ -103,8 +113,17 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // 6a. Countdown Settings
+        $prayers = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+        foreach ($prayers as $prayer) {
+            CountdownSetting::updateOrCreate(
+                ['prayer_name' => $prayer],
+                ['minutes' => 5]
+            );
+        }
+
         // 6b. Syuruq Settings
-        \App\Models\SyuruqSetting::updateOrCreate(
+        SyuruqSetting::updateOrCreate(
             ['id' => 1],
             ['is_enabled' => true, 'duration_minutes' => 10]
         );
