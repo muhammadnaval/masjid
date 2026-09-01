@@ -1,3 +1,6 @@
+# Node.js artifacts
+node_modules/
+dist/
 
 # InsForge & AI agent skills
 .insforge
