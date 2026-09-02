@@ -12,6 +12,7 @@ import 'services/prayer_service.dart';
 import 'services/audio_service.dart';
 import 'widgets/header_bar.dart';
 import 'widgets/prayer_schedule_row.dart';
+import 'widgets/display_typography.dart';
 import 'widgets/media_carousel.dart';
 import 'widgets/running_text_bar.dart';
 import 'widgets/adzan_overlay.dart';
@@ -782,6 +783,8 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayTypography =
+        DisplayTypography.fromScreenWidth(MediaQuery.of(context).size.width);
     return Scaffold(
       backgroundColor: _themeBackgroundColor,
       body: Stack(
@@ -907,21 +910,21 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                                       Icon(
                                         Icons.access_time_filled,
                                         color: _themePrimaryColor,
-                                        size: 17,
+                                        size: displayTypography.panelTitleIconSize,
                                       ),
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: 8),
                                       Text(
                                         "JADWAL SHALAT HARI INI",
                                         style: GoogleFonts.outfit(
                                           color: _themeTextColor,
-                                          fontSize: 12,
+                                          fontSize: displayTypography.panelTitleFontSize,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 1.2,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 9),
+                                  SizedBox(height: displayTypography.panelTitleSpacing),
                                   Expanded(
                                     child: ListView(
                                       children: _schedule.items.map((item) {
@@ -931,9 +934,9 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                                           margin: const EdgeInsets.symmetric(
                                             vertical: 3,
                                           ),
-                                          padding: const EdgeInsets.symmetric(
+                                          padding: EdgeInsets.symmetric(
                                             horizontal: 10,
-                                            vertical: 7,
+                                            vertical: displayTypography.panelRowVerticalPadding,
                                           ),
                                           decoration: BoxDecoration(
                                             color: isNext
@@ -961,25 +964,21 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                                                   color: isNext
                                                       ? const Color(0xFFFDE68A)
                                                       : const Color(0xFFCBD5E1),
-                                                  fontSize: 11,
+                                                  fontSize: displayTypography.panelNameFontSize,
                                                   fontWeight: isNext
                                                       ? FontWeight.bold
-                                                      : FontWeight.w500,
+                                                      : FontWeight.w600,
                                                 ),
                                               ),
                                               Text(
                                                 item.timeString,
-                                                style:
-                                                    GoogleFonts.shareTechMono(
-                                                      color: isNext
-                                                          ? const Color(
-                                                              0xFFFBBF24,
-                                                            )
-                                                          : _themeTextColor,
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
+                                                style: GoogleFonts.shareTechMono(
+                                                  color: isNext
+                                                      ? const Color(0xFFFBBF24)
+                                                      : _themeTextColor,
+                                                  fontSize: displayTypography.panelTimeFontSize,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ],
                                           ),

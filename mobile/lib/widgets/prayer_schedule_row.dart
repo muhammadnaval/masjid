@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/display_state.dart';
 import '../models/prayer_schedule.dart';
 import '../services/prayer_service.dart';
+import 'display_typography.dart';
 
 class PrayerScheduleRow extends StatelessWidget {
   final DailyPrayerSchedule schedule;
@@ -47,6 +48,8 @@ class PrayerScheduleRow extends StatelessWidget {
     final activePrimary = primaryColor ?? const Color(0xFF38BDF8);
     final activeSecondary = secondaryColor ?? const Color(0xFFD97706);
     final activeText = textColor ?? Colors.white;
+    final screenW = MediaQuery.of(context).size.width;
+    final typo = DisplayTypography.fromScreenWidth(screenW);
 
     return Row(
       children: schedule.items.map((item) {
@@ -56,7 +59,7 @@ class PrayerScheduleRow extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: EdgeInsets.symmetric(
-              vertical: isNext ? 6 : 5,
+              vertical: isNext ? typo.panelRowVerticalPadding : typo.panelRowVerticalPadding * 0.85,
               horizontal: 5,
             ),
             decoration: BoxDecoration(
@@ -99,96 +102,99 @@ class PrayerScheduleRow extends StatelessWidget {
                       ),
                     ],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Highlight Tag if Next
-                if (isNext)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 2),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      "SELANJUTNYA",
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 6,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Highlight Tag if Next
+                  if (isNext)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        "SELANJUTNYA",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: typo.nextBadgeFontSize,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
+
+                  // Icon
+                  Icon(
+                    _getPrayerIcon(item.name),
+                    color: isNext ? Colors.white : activePrimary,
+                    size: isNext ? typo.iconSize : typo.iconSize * 0.9,
                   ),
-
-                // Icon
-                Icon(
-                  _getPrayerIcon(item.name),
-                  color: isNext ? Colors.white : activePrimary,
-                  size: isNext ? 15 : 14,
-                ),
-                const SizedBox(height: 2),
-
-                // Prayer Name
-                Text(
-                  item.name.displayName,
-                  style: GoogleFonts.outfit(
-                    color: isNext ? activeText : activeText.withOpacity(0.65),
-                    fontSize: isNext ? 10 : 9,
-                    fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
-                    letterSpacing: 0.75,
-                  ),
-                ),
-                const SizedBox(height: 2),
-
-                // Prayer Time
-                Text(
-                  item.timeString,
-                  style: GoogleFonts.shareTechMono(
-                    color: activeText,
-                    fontSize: isNext ? 17 : 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                // Countdown Timer under Next Prayer
-                if (isNext) ...[
                   const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.timer,
-                          color: Color(0xFFFEF08A),
-                          size: 9,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          PrayerService.formatDuration(nextPrayerCountdown),
-                          style: GoogleFonts.shareTechMono(
-                            color: const Color(0xFFFEF08A),
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+
+                  // Prayer Name
+                  Text(
+                    item.name.displayName,
+                    style: GoogleFonts.outfit(
+                      color: isNext ? activeText : activeText.withOpacity(0.65),
+                      fontSize: typo.prayerNameFontSize,
+                      fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                      letterSpacing: 0.75,
                     ),
                   ),
+                  const SizedBox(height: 2),
+
+                  // Prayer Time
+                  Text(
+                    item.timeString,
+                    style: GoogleFonts.shareTechMono(
+                      color: activeText,
+                      fontSize: typo.prayerTimeFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  // Countdown Timer under Next Prayer
+                  if (isNext) ...[
+                    const SizedBox(height: 2),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer,
+                            color: const Color(0xFFFEF08A),
+                            size: typo.countdownFontSize,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            PrayerService.formatDuration(nextPrayerCountdown),
+                            style: GoogleFonts.shareTechMono(
+                              color: const Color(0xFFFEF08A),
+                              fontSize: typo.countdownFontSize,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
