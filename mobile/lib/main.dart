@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'models/display_state.dart';
 import 'models/prayer_schedule.dart';
@@ -12,7 +11,6 @@ import 'services/prayer_service.dart';
 import 'services/audio_service.dart';
 import 'widgets/header_bar.dart';
 import 'widgets/prayer_schedule_row.dart';
-import 'widgets/display_typography.dart';
 import 'widgets/media_carousel.dart';
 import 'widgets/running_text_bar.dart';
 import 'widgets/adzan_overlay.dart';
@@ -707,10 +705,7 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
     final n = _nextPrayer!.name;
     if (n == PrayerName.imsak || n == PrayerName.syuruq) return false;
     final secs = _nextPrayerCountdown.inSeconds;
-    final minutes = PrayerService.countdownMinutesFor(
-      n,
-      _countdownSettings,
-    );
+    final minutes = PrayerService.countdownMinutesFor(n, _countdownSettings);
     return secs > 0 && secs <= minutes * 60;
   }
 
@@ -783,8 +778,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final displayTypography =
-        DisplayTypography.fromScreenWidth(MediaQuery.of(context).size.width);
     return Scaffold(
       backgroundColor: _themeBackgroundColor,
       body: Stack(
@@ -868,14 +861,8 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Left: Media Carousel
+                        // Left: Media Carousel (full width — right panel removed)
                         Expanded(
-                          flex: _layoutMode == 'hero_image'
-                              ? 8
-                              : ((_layoutMode == 'media_focused' ||
-                                        _layoutMode == 'minimal')
-                                    ? 10
-                                    : 6),
                           child: MediaCarousel(
                             items: _mediaSlides,
                             isPaused:
@@ -883,113 +870,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                                 _currentMode == DisplayMode.iqamah,
                           ),
                         ),
-                        if (_layoutMode == 'default' ||
-                            _layoutMode == 'hero_image')
-                          const SizedBox(width: 12),
-                        if (_layoutMode == 'default' ||
-                            _layoutMode == 'hero_image')
-                          Expanded(
-                            flex: _layoutMode == 'hero_image' ? 2 : 4,
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF0F172A,
-                                ).withOpacity(0.85),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _themePrimaryColor.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.access_time_filled,
-                                        color: _themePrimaryColor,
-                                        size: displayTypography.panelTitleIconSize,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        "JADWAL SHALAT HARI INI",
-                                        style: GoogleFonts.outfit(
-                                          color: _themeTextColor,
-                                          fontSize: displayTypography.panelTitleFontSize,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: displayTypography.panelTitleSpacing),
-                                  Expanded(
-                                    child: ListView(
-                                      children: _schedule.items.map((item) {
-                                        final isNext =
-                                            _nextPrayer?.name == item.name;
-                                        return Container(
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 3,
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: displayTypography.panelRowVerticalPadding,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isNext
-                                                ? _themeSecondaryColor
-                                                      .withOpacity(0.25)
-                                                : const Color(
-                                                    0xFF1E293B,
-                                                  ).withOpacity(0.6),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: isNext
-                                                  ? _themeSecondaryColor
-                                                  : Colors.transparent,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                item.name.displayName,
-                                                style: GoogleFonts.outfit(
-                                                  color: isNext
-                                                      ? const Color(0xFFFDE68A)
-                                                      : const Color(0xFFCBD5E1),
-                                                  fontSize: displayTypography.panelNameFontSize,
-                                                  fontWeight: isNext
-                                                      ? FontWeight.bold
-                                                      : FontWeight.w600,
-                                                ),
-                                              ),
-                                              Text(
-                                                item.timeString,
-                                                style: GoogleFonts.shareTechMono(
-                                                  color: isNext
-                                                      ? const Color(0xFFFBBF24)
-                                                      : _themeTextColor,
-                                                  fontSize: displayTypography.panelTimeFontSize,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),

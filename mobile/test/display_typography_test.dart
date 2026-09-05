@@ -17,10 +17,12 @@ void main() {
       expect(typography.countdownFontSize, greaterThanOrEqualTo(14));
       expect(typography.iconSize, greaterThanOrEqualTo(22));
 
-      // Right panel
-      expect(typography.panelTitleFontSize, greaterThanOrEqualTo(18));
-      expect(typography.panelNameFontSize, greaterThanOrEqualTo(18));
-      expect(typography.panelTimeFontSize, greaterThanOrEqualTo(26));
+      // Header information — enlarged for TV readability
+      expect(typography.headerNameFontSize, greaterThanOrEqualTo(60));
+      expect(typography.headerAddressFontSize, greaterThanOrEqualTo(33));
+      expect(typography.headerDateFontSize, greaterThanOrEqualTo(39));
+      expect(typography.headerHijriFontSize, greaterThanOrEqualTo(33));
+      expect(typography.clockFontSize, greaterThanOrEqualTo(87));
     });
 
     test('1280px (720p) scales down but stays readable', () {
@@ -29,7 +31,7 @@ void main() {
       // Even on smaller screens, time must be readable
       expect(typography.prayerTimeFontSize, greaterThanOrEqualTo(22));
       expect(typography.prayerNameFontSize, greaterThanOrEqualTo(11));
-      expect(typography.panelTimeFontSize, greaterThanOrEqualTo(19));
+      expect(typography.clockFontSize, greaterThanOrEqualTo(58));
     });
 
     test('3840px (4K) scales up but caps at reasonable maximum', () {
@@ -37,7 +39,7 @@ void main() {
 
       // Should scale up but not excessively
       expect(typography.prayerTimeFontSize, lessThanOrEqualTo(50));
-      expect(typography.panelTimeFontSize, lessThanOrEqualTo(48));
+      expect(typography.clockFontSize, lessThanOrEqualTo(121));
     });
 
     test('scale factor is linearly proportional to screen width', () {
@@ -132,19 +134,21 @@ void main() {
         ],
       );
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 1920,
-            height: 200,
-            child: PrayerScheduleRow(
-              schedule: schedule,
-              nextPrayer: schedule.items.first,
-              nextPrayerCountdown: const Duration(minutes: 30),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 1920,
+              height: 200,
+              child: PrayerScheduleRow(
+                schedule: schedule,
+                nextPrayer: schedule.items.first,
+                nextPrayerCountdown: const Duration(minutes: 30),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
 
       expect(find.text('SELANJUTNYA'), findsOneWidget);

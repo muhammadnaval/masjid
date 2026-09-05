@@ -1,33 +1,35 @@
 /// Responsive typography scaling for TV display.
 ///
-/// Base design targets 1920×1080 (1080p landscape TV).
-/// Fonts scale linearly with screen width, clamped to reasonable bounds.
+/// Design baselines (at 1920px / 1080p) target readability from 10 meters:
+/// clock and prayer times are enlarged ~3x relative to the original design.
 class DisplayTypography {
+  // --- Header bar ---
+  final double headerNameFontSize;
+  final double headerAddressFontSize;
+  final double headerLogoSize;
+  final double headerDateFontSize;
+  final double headerHijriFontSize;
+  final double clockFontSize;
+
+  // --- Bottom prayer card row ---
   final double prayerTimeFontSize;
   final double prayerNameFontSize;
   final double nextBadgeFontSize;
   final double countdownFontSize;
   final double iconSize;
 
-  final double panelTitleFontSize;
-  final double panelTitleIconSize;
-  final double panelNameFontSize;
-  final double panelTimeFontSize;
-  final double panelRowVerticalPadding;
-  final double panelTitleSpacing;
-
   const DisplayTypography({
+    required this.headerNameFontSize,
+    required this.headerAddressFontSize,
+    required this.headerLogoSize,
+    required this.headerDateFontSize,
+    required this.headerHijriFontSize,
+    required this.clockFontSize,
     required this.prayerTimeFontSize,
     required this.prayerNameFontSize,
     required this.nextBadgeFontSize,
     required this.countdownFontSize,
     required this.iconSize,
-    required this.panelTitleFontSize,
-    required this.panelTitleIconSize,
-    required this.panelNameFontSize,
-    required this.panelTimeFontSize,
-    required this.panelRowVerticalPadding,
-    required this.panelTitleSpacing,
   });
 
   /// Design baseline: 1920px width.
@@ -42,20 +44,20 @@ class DisplayTypography {
     final scale = rawScale.clamp(_minScale, _maxScale);
 
     return DisplayTypography(
-      // Bottom prayer card — readable from 10m
-      prayerTimeFontSize: _scale(34, scale),
-      prayerNameFontSize: _scale(18, scale),
-      nextBadgeFontSize: _scale(12, scale),
-      countdownFontSize: _scale(16, scale),
-      iconSize: _scale(24, scale),
+      // Header — ~3x original sizes (20/11/45/13/11/29)
+      headerNameFontSize: _scale(60, scale),
+      headerAddressFontSize: _scale(33, scale),
+      headerLogoSize: _scale(135, scale),
+      headerDateFontSize: _scale(39, scale),
+      headerHijriFontSize: _scale(33, scale),
+      clockFontSize: _scale(87, scale),
 
-      // Right panel
-      panelTitleFontSize: _scale(20, scale),
-      panelTitleIconSize: _scale(22, scale),
-      panelNameFontSize: _scale(19, scale),
-      panelTimeFontSize: _scale(30, scale),
-      panelRowVerticalPadding: _scale(8, scale),
-      panelTitleSpacing: _scale(12, scale),
+      // Bottom prayer card — ~3x original sizes (12/9/6/8/15)
+      prayerTimeFontSize: _scale(36, scale),
+      prayerNameFontSize: _scale(27, scale),
+      nextBadgeFontSize: _scale(18, scale),
+      countdownFontSize: _scale(24, scale),
+      iconSize: _scale(45, scale),
     );
   }
 
