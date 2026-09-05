@@ -40,7 +40,8 @@ void main() {
       expect(find.text('MASJID AL-HIDAYAH SITEBA'), findsOneWidget);
 
       // Verify prayer time slots present in widget tree
-      expect(find.text('IMSAK'), findsAtLeastNWidgets(1));
+      // (Imsak is intentionally hidden from the bottom prayer row)
+      expect(find.text('IMSAK'), findsNothing);
       expect(find.text('SUBUH'), findsAtLeastNWidgets(1));
       expect(find.text('SYURUQ'), findsAtLeastNWidgets(1));
       expect(find.text('DZUHUR'), findsAtLeastNWidgets(1));

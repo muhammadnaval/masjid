@@ -51,8 +51,15 @@ class PrayerScheduleRow extends StatelessWidget {
     final screenW = MediaQuery.of(context).size.width;
     final typo = DisplayTypography.fromScreenWidth(screenW);
 
+    // Imsak is a pre-dawn reminder, not one of the prayer times shown on
+    // the main schedule row. Keep it in the schedule model for calculations,
+    // but omit it from this display widget.
+    final displayedItems = schedule.items.where(
+      (item) => item.name != PrayerName.imsak,
+    );
+
     return Row(
-      children: schedule.items.map((item) {
+      children: displayedItems.map((item) {
         final isNext = (nextPrayer?.name == item.name);
 
         return Expanded(
