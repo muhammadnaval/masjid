@@ -10,6 +10,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
+// Root URL langsung ke halaman login admin
+Route::get('/', fn () => redirect()->route('admin.login'));
+
 Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/', fn () => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
