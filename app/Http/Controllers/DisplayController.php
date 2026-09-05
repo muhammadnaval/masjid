@@ -226,7 +226,13 @@ class DisplayController extends Controller
                 'donationSettings' => $donation ? [
                     'title' => $donation->title,
                     'description' => $donation->description,
-                    'qr_code_path' => $donation->qr_code_path,
+                    // Uploaded QRs are stored as bare disk paths (donasi/x.png);
+                    // expose the /storage URL so Flutter's _resolveStorageUrl
+                    // (which only prepends the server base) builds a working link.
+                    'qr_code_path' => $donation->qr_code_path
+                        && !str_starts_with((string) $donation->qr_code_path, 'http')
+                        ? asset('storage/'.$donation->qr_code_path)
+                        : $donation->qr_code_path,
                     'account_name' => $donation->account_name,
                     'is_active' => (bool) $donation->is_active,
                 ] : null,
