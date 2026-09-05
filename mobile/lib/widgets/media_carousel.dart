@@ -179,27 +179,6 @@ class _MediaCarouselState extends State<MediaCarousel> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Page Indicator Dots
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_slides.length, (index) {
-              final isActive = index == _currentIndex;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: isActive ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFF10B981)
-                      : const Color(0xFF475569),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              );
-            }),
-          ),
         ],
       ),
     );
