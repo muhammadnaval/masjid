@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\PrayerLocation;
 use App\Models\PrayerSchedule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -10,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 class PrayerScheduleService
 {
     /**
-     * Get list of provinces from EQuran.id API.
+     * Get list of provinces from EQuran.id API, with a local fallback.
      */
     public function getProvinces(): array
     {
@@ -20,31 +19,20 @@ class PrayerScheduleService
                 return $response->json()['data'];
             }
         } catch (\Exception $e) {
-            Log::warning('Gagal mengambil daftar provinsi dari EQuran.id API: ' . $e->getMessage());
+            Log::warning('Gagal mengambil daftar provinsi dari EQuran.id API: '.$e->getMessage());
         }
 
         return [
-            'Sumatera Barat',
-            'DKI Jakarta',
-            'Jawa Barat',
-            'Jawa Tengah',
-            'DI Yogyakarta',
-            'Jawa Timur',
-            'Banten',
-            'Bali',
-            'Nusa Tenggara Barat',
-            'Nusa Tenggara Timur',
-            'Kalimantan Barat',
-            'Kalimantan Selatan',
-            'Kalimantan Timur',
-            'Sulawesi Selatan',
-            'Sulawesi Utara',
-            'Papua',
+            'Sumatera Barat', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah',
+            'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
+            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat',
+            'Kalimantan Selatan', 'Kalimantan Timur', 'Sulawesi Selatan',
+            'Sulawesi Utara', 'Papua',
         ];
     }
 
     /**
-     * Get list of cities for a given province from EQuran.id API.
+     * Get list of cities for a province from EQuran.id API, with a local fallback.
      */
     public function getCitiesByProvince(string $province): array
     {
@@ -62,21 +50,27 @@ class PrayerScheduleService
                 }, $response->json()['data']);
             }
         } catch (\Exception $e) {
-            Log::warning('Gagal mengambil daftar kabupaten/kota dari EQuran.id API: ' . $e->getMessage());
+            Log::warning('Gagal mengambil daftar kota dari EQuran.id API: '.$e->getMessage());
         }
 
-        return PrayerLocation::where('province_name', $province)->get()->toArray();
+        return PrayerLocation::where('province_name', $province)
+            ->orderBy('city_name')
+            ->get()
+            ->map(fn ($location) => [
+                'province_name' => $location->province_name,
+                'city_name' => $location->city_name,
+                'city_code' => $location->city_code,
+            ])
+            ->all();
     }
 
-    /**
-     * Sync prayer schedule for a given province and city from EQuran.id API.
-     */
+
     public function syncSchedules(string $province = 'Sumatera Barat', string $city = 'Kota Padang'): bool
     {
         try {
             $year = (int) date('Y');
             $month = (int) date('m');
-            
+
             $response = Http::timeout(8)->post('https://equran.id/api/v2/shalat', [
                 'provinsi' => $province,
                 'kabkota' => $city,
@@ -122,6 +116,7 @@ class PrayerScheduleService
             ]
         );
 
-        return true;
+        // API unreachable/invalid: report failure so sync logs tell the truth
+        return false;
     }
 }

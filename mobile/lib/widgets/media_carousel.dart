@@ -79,14 +79,37 @@ class _MediaCarouselState extends State<MediaCarousel> {
   @override
   void didUpdateWidget(covariant MediaCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.items != oldWidget.items && _currentIndex >= _slides.length) {
+    final sequenceChanged = !_sameSlideSequence(widget.items, oldWidget.items);
+    if (sequenceChanged && _currentIndex >= _slides.length) {
       _currentIndex = 0;
     }
     if (widget.isPaused) {
       _timer?.cancel();
-    } else if (oldWidget.isPaused || widget.items != oldWidget.items) {
+    } else if (oldWidget.isPaused || sequenceChanged) {
       _startTimer();
     }
+  }
+
+  bool _sameSlideSequence(
+    List<MediaSlideItem>? current,
+    List<MediaSlideItem>? previous,
+  ) {
+    if (identical(current, previous)) return true;
+    if (current == null || previous == null) return current == previous;
+    if (current.length != previous.length) return false;
+    for (var i = 0; i < current.length; i++) {
+      final a = current[i];
+      final b = previous[i];
+      if (a.id != b.id ||
+          a.type != b.type ||
+          a.durationSeconds != b.durationSeconds ||
+          a.title != b.title ||
+          a.subtitle != b.subtitle ||
+          a.imagePath != b.imagePath) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _startTimer() {
@@ -155,27 +178,6 @@ class _MediaCarouselState extends State<MediaCarousel> {
                 child: _buildSlideContent(slide),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Page Indicator Dots
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_slides.length, (index) {
-              final isActive = index == _currentIndex;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: isActive ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFF10B981)
-                      : const Color(0xFF475569),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              );
-            }),
           ),
         ],
       ),

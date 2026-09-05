@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Models\PrayerLocation;
-use App\Models\PrayerSchedule;
-use App\Models\PrayerTimeCorrection;
+use App\Models\SyncLog;
 use App\Services\PrayerScheduleService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class PrayerScheduleController extends Controller
 {
@@ -18,54 +18,38 @@ class PrayerScheduleController extends Controller
         $this->service = $service;
     }
 
-    public function index(): JsonResponse
-    {
-        $locations = PrayerLocation::all();
-        $activeLocation = PrayerLocation::where('is_active', true)->first() ?? PrayerLocation::first();
-        $schedule = PrayerSchedule::where('date', date('Y-m-d'))->first() ?? PrayerSchedule::first();
-        $corrections = PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name');
-        $provinces = $this->service->getProvinces();
-
-        return response()->json([
-            'provinces' => $provinces,
-            'locations' => $locations,
-            'active_location' => $activeLocation,
-            'schedule' => $schedule,
-            'corrections' => $corrections,
-        ]);
-    }
-
-    public function provinces(): JsonResponse
-    {
-        return response()->json([
-            'code' => 200,
-            'data' => $this->service->getProvinces(),
-        ]);
-    }
-
-    public function kabkota(Request $request): JsonResponse
+    /**
+     * Return cities for the province selected by the Blade location form.
+     */
+    public function getCities(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'provinsi' => 'required|string',
+            'province' => ['required', 'string', 'max:100'],
         ]);
 
         return response()->json([
-            'code' => 200,
-            'data' => $this->service->getCitiesByProvince($validated['provinsi']),
+            'data' => $this->service->getCitiesByProvince($validated['province']),
         ]);
     }
 
-    public function updateLocation(Request $request): JsonResponse
+    /**
+     * Save the active location from the Blade admin panel and sync its schedule.
+     */
+    public function updateLocationWeb(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'province_name' => 'required|string',
-            'city_name' => 'required|string',
-            'city_code' => 'nullable|string',
+            'province_name' => ['required', 'string', 'max:100'],
+            'city_name' => ['required', 'string', 'max:150'],
+            'city_code' => ['nullable', 'string', 'max:100'],
         ]);
 
         PrayerLocation::query()->update(['is_active' => false]);
 
-        $cityCode = $validated['city_code'] ?? strtolower(str_replace([' ', '.'], ['-', ''], $validated['city_name']));
+        $cityCode = $validated['city_code'] ?: strtolower(str_replace(
+            [' ', '.'],
+            ['-', ''],
+            $validated['city_name']
+        ));
 
         $location = PrayerLocation::updateOrCreate(
             ['city_name' => $validated['city_name']],
@@ -76,37 +60,37 @@ class PrayerScheduleController extends Controller
             ]
         );
 
-        // Auto sync schedule for newly activated city via EQuran.id API
-        $this->service->syncSchedules($validated['province_name'], $validated['city_name']);
+        $success = $this->service->syncSchedules(
+            $location->province_name,
+            $location->city_name
+        );
 
-        return response()->json([
-            'message' => 'Lokasi kota/kabupaten berhasil diubah.',
-            'active_location' => $location,
-            'schedule' => PrayerSchedule::where('date', date('Y-m-d'))->first(),
+        SyncLog::create([
+            'type' => 'schedule_sync',
+            'status' => $success ? 'success' : 'failed',
+            'message' => $success
+                ? "Sinkronisasi jadwal sholat Kemenag RI untuk {$location->city_name} berhasil."
+                : "Gagal menghubungkan ke server jadwal Kemenag RI untuk {$location->city_name}.",
+            'details' => [
+                'city' => $location->city_name,
+                'province' => $location->province_name,
+                'time' => now()->toIso8601String(),
+            ],
         ]);
+
+        return redirect()->route('admin.page.edit', 'schedule')->with(
+            $success ? 'success' : 'error',
+            $success
+                ? "Lokasi diubah ke {$location->city_name} dan jadwal berhasil disinkronisasi."
+                : "Lokasi diubah ke {$location->city_name}, tetapi sinkronisasi jadwal gagal."
+        );
     }
 
-    public function updateCorrections(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'corrections' => 'required|array',
-            'corrections.*' => 'integer',
-        ]);
-
-        foreach ($validated['corrections'] as $prayerName => $minutes) {
-            PrayerTimeCorrection::updateOrCreate(
-                ['prayer_name' => $prayerName],
-                ['correction_minutes' => $minutes]
-            );
-        }
-
-        return response()->json([
-            'message' => 'Koreksi menit waktu sholat berhasil disimpan.',
-            'corrections' => PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name'),
-        ]);
-    }
-
-    public function sync(Request $request): JsonResponse
+    /**
+     * POST /admin/jadwal-sholat/sinkron
+     * Web-only sync action used by Blade admin panel.
+     */
+    public function syncWeb(): RedirectResponse
     {
         $activeLocation = PrayerLocation::where('is_active', true)->first() ?? PrayerLocation::first();
         $city = $activeLocation->city_name ?? 'Kota Padang';
@@ -115,7 +99,7 @@ class PrayerScheduleController extends Controller
             $city
         );
 
-        \App\Models\SyncLog::create([
+        SyncLog::create([
             'type'    => 'schedule_sync',
             'status'  => $success ? 'success' : 'failed',
             'message' => $success
@@ -127,11 +111,11 @@ class PrayerScheduleController extends Controller
             ],
         ]);
 
-        return response()->json([
-            'status' => $success ? 'success' : 'error',
-            'message' => 'Sinkronisasi jadwal sholat EQuran.id API (Kemenag RI) berhasil diperbarui.',
-            'last_sync' => now()->toIso8601String(),
-            'schedule' => PrayerSchedule::where('date', date('Y-m-d'))->first(),
-        ]);
+        return redirect()->route('admin.page.edit', 'schedule')->with(
+            'success',
+            $success
+                ? "Jadwal sholat untuk {$city} berhasil disinkronisasi."
+                : "Gagal menyinkronkan jadwal sholat. Silakan coba lagi."
+        );
     }
 }

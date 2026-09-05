@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'models/display_state.dart';
 import 'models/prayer_schedule.dart';
@@ -57,7 +56,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   late DateTime _currentTime;
   Timer? _clockTimer;
   Timer? _apiPollTimer;
-  Timer? _randomHadisTimer;
 
   String _mosqueName = "MASJID AL-HIDAYAH SITEBA";
   String _mosqueAddress =
@@ -82,7 +80,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   PrayerScheduleItem? _nextPrayer;
   Duration _nextPrayerCountdown = Duration.zero;
   List<MediaSlideItem>? _mediaSlides;
-  MediaSlideItem? _randomHadisSlide;
 
   Map<String, dynamic>? _audioSettings;
   Map<String, dynamic>? _adzanSettings;
@@ -108,11 +105,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
     );
     _updateScheduleAndNextPrayer();
     _startClockTimer();
-    _fetchRandomHadis();
-    _randomHadisTimer = Timer.periodic(
-      const Duration(minutes: 30),
-      (_) => _fetchRandomHadis(),
-    );
     if (widget.displayState case final state?) {
       _applyApiState(state);
     } else {
@@ -145,22 +137,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   Future<void> _fetchApiState() async {
     final apiData = await ApiService.fetchDisplayState();
     if (apiData != null) _applyApiState(apiData);
-  }
-
-  Future<void> _fetchRandomHadis() async {
-    final slide = await ApiService.fetchRandomHadis();
-    if (!mounted || slide == null) return;
-    setState(() {
-      _randomHadisSlide = slide;
-      _syncRandomHadisSlide();
-    });
-  }
-
-  void _syncRandomHadisSlide() {
-    final slide = _randomHadisSlide;
-    _mediaSlides ??= [];
-    _mediaSlides!.removeWhere((item) => item.id == 'random_hadis');
-    if (slide != null) _mediaSlides!.insert(0, slide);
   }
 
   void _applyApiState(Map<String, dynamic> apiData) {
@@ -444,7 +420,11 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
               donasiData['qr_code_path'] ?? donasiData['qr_code_url'],
             ),
             type: SlideType.donation,
-            durationSeconds: 10,
+            durationSeconds:
+                int.tryParse(
+                  donasiData['duration_seconds']?.toString() ?? '',
+                ) ??
+                10,
           );
         }
         _mediaSlides = withDonationSlide(_mediaSlides, donasiSlide);
@@ -479,7 +459,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
           _mediaSlides!.removeWhere((item) => item.id == slide.id);
           _mediaSlides!.add(slide);
         }
-        _syncRandomHadisSlide();
 
         final rtList = apiData['runningTexts'] as List?;
         if (rtList != null) {
@@ -706,10 +685,7 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
     final n = _nextPrayer!.name;
     if (n == PrayerName.imsak || n == PrayerName.syuruq) return false;
     final secs = _nextPrayerCountdown.inSeconds;
-    final minutes = PrayerService.countdownMinutesFor(
-      n,
-      _countdownSettings,
-    );
+    final minutes = PrayerService.countdownMinutesFor(n, _countdownSettings);
     return secs > 0 && secs <= minutes * 60;
   }
 
@@ -774,7 +750,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   void dispose() {
     _clockTimer?.cancel();
     _apiPollTimer?.cancel();
-    _randomHadisTimer?.cancel();
     _adzanTimer?.cancel();
     _fridayTimer?.cancel();
     super.dispose();
@@ -865,14 +840,8 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Left: Media Carousel
+                        // Left: Media Carousel (full width — right panel removed)
                         Expanded(
-                          flex: _layoutMode == 'hero_image'
-                              ? 8
-                              : ((_layoutMode == 'media_focused' ||
-                                        _layoutMode == 'minimal')
-                                    ? 10
-                                    : 6),
                           child: MediaCarousel(
                             items: _mediaSlides,
                             isPaused:
@@ -880,117 +849,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
                                 _currentMode == DisplayMode.iqamah,
                           ),
                         ),
-                        if (_layoutMode == 'default' ||
-                            _layoutMode == 'hero_image')
-                          const SizedBox(width: 12),
-                        if (_layoutMode == 'default' ||
-                            _layoutMode == 'hero_image')
-                          Expanded(
-                            flex: _layoutMode == 'hero_image' ? 2 : 4,
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF0F172A,
-                                ).withOpacity(0.85),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _themePrimaryColor.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.access_time_filled,
-                                        color: _themePrimaryColor,
-                                        size: 17,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "JADWAL SHALAT HARI INI",
-                                        style: GoogleFonts.outfit(
-                                          color: _themeTextColor,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 9),
-                                  Expanded(
-                                    child: ListView(
-                                      children: _schedule.items.map((item) {
-                                        final isNext =
-                                            _nextPrayer?.name == item.name;
-                                        return Container(
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 3,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 7,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isNext
-                                                ? _themeSecondaryColor
-                                                      .withOpacity(0.25)
-                                                : const Color(
-                                                    0xFF1E293B,
-                                                  ).withOpacity(0.6),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: isNext
-                                                  ? _themeSecondaryColor
-                                                  : Colors.transparent,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                item.name.displayName,
-                                                style: GoogleFonts.outfit(
-                                                  color: isNext
-                                                      ? const Color(0xFFFDE68A)
-                                                      : const Color(0xFFCBD5E1),
-                                                  fontSize: 11,
-                                                  fontWeight: isNext
-                                                      ? FontWeight.bold
-                                                      : FontWeight.w500,
-                                                ),
-                                              ),
-                                              Text(
-                                                item.timeString,
-                                                style:
-                                                    GoogleFonts.shareTechMono(
-                                                      color: isNext
-                                                          ? const Color(
-                                                              0xFFFBBF24,
-                                                            )
-                                                          : _themeTextColor,
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),

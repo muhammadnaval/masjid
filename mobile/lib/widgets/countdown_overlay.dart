@@ -21,7 +21,9 @@ class CountdownOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remainingSecs = remaining.inSeconds.clamp(0, total.inSeconds);
-    final progress = total.inSeconds == 0 ? 0.0 : remainingSecs / total.inSeconds;
+    final progress = total.inSeconds == 0
+        ? 0.0
+        : remainingSecs / total.inSeconds;
     final isFinal = remainingSecs <= 10 && remainingSecs > 0;
     final accent = isFinal ? const Color(0xFFF59E0B) : const Color(0xFF10B981);
     final accent2 = isFinal ? const Color(0xFFD97706) : const Color(0xFF2DD4BF);
@@ -115,9 +117,7 @@ class CountdownOverlay extends StatelessWidget {
                         foreground: Paint()
                           ..shader = LinearGradient(
                             colors: [Colors.white, accent2],
-                          ).createShader(
-                            const Rect.fromLTWH(0, 0, 460, 220),
-                          ),
+                          ).createShader(const Rect.fromLTWH(0, 0, 460, 220)),
                         shadows: [
                           Shadow(
                             color: accent.withValues(alpha: 0.9),
@@ -144,7 +144,9 @@ class CountdownOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      isFinal ? 'BERSIAP — ADZAN SEGERA' : 'SEGERA LAKUKAN SHALAT',
+                      isFinal
+                          ? 'BERSIAP — ADZAN SEGERA'
+                          : 'MENUNGGU ADZAN SHALAT',
                       style: GoogleFonts.inter(
                         color: Colors.white.withValues(alpha: 0.55),
                         fontSize: 22,
@@ -184,9 +186,10 @@ class _PulsingState extends State<_Pulsing>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _s = Tween(begin: 1.0, end: 1.04).animate(
-      CurvedAnimation(parent: _c, curve: Curves.easeInOut),
-    );
+    _s = Tween(
+      begin: 1.0,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
     if (widget.pulse) _c.repeat(reverse: true);
   }
 

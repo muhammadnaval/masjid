@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\MosqueProfile;
 use App\Models\PrayerLocation;
@@ -15,17 +14,23 @@ use App\Models\AudioSetting;
 use App\Models\DonationSetting;
 use App\Models\ThemeSetting;
 use App\Models\Agenda;
+use App\Models\FridaySetting;
+use App\Models\SyuruqSetting;
+use App\Models\CountdownSetting;
+use App\Services\HijriDateService;
 
 class DisplayController extends Controller
 {
-    /**
-     * Get JSON state for /display/state endpoint.
-     */
-    public function state(\App\Services\HijriDateService $hijriService): JsonResponse
-    {
+    public function state(
+        HijriDateService $hijriService,
+    ): JsonResponse {
+        // --- Profile ---
         $profile = MosqueProfile::first();
+
+        // --- Location ---
         $location = PrayerLocation::where('is_active', true)->first() ?? PrayerLocation::first();
-        
+
+        // --- Schedule (auto-sync jika kosong) ---
         $schedule = PrayerSchedule::where('date', date('Y-m-d'))->first();
         if (!$schedule) {
             $prayerService = app(\App\Services\PrayerScheduleService::class);
@@ -35,131 +40,285 @@ class DisplayController extends Controller
             );
             $schedule = PrayerSchedule::where('date', date('Y-m-d'))->first() ?? PrayerSchedule::first();
         }
+        $scheduleData = $schedule ? [
+            'date' => $schedule->date,
+            'imsak' => $this->timeOnly($schedule->imsak),
+            'subuh' => $this->timeOnly($schedule->subuh),
+            'syuruq' => $this->timeOnly($schedule->syuruq),
+            'dzuhur' => $this->timeOnly($schedule->dzuhur),
+            'ashar' => $this->timeOnly($schedule->ashar),
+            'maghrib' => $this->timeOnly($schedule->maghrib),
+            'isya' => $this->timeOnly($schedule->isya),
+        ] : $this->defaultSchedule();
 
-        if (!$schedule) {
-            $schedule = (object) [
-                'date' => date('Y-m-d'),
-                'imsak' => '04:45:00',
-                'subuh' => '04:55:00',
-                'syuruq' => '06:12:00',
-                'dzuhur' => '12:20:00',
-                'ashar' => '15:42:00',
-                'maghrib' => '18:25:00',
-                'isya' => '19:36:00',
-                'source' => 'Jadwal Resmi Kementerian Agama RI',
-            ];
-        }
-        $correctionsDb = PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name');
+        // --- Time corrections ---
+        $correctionsDb = PrayerTimeCorrection::all()->pluck('correction_minutes', 'prayer_name')->toArray();
         $corrections = array_merge([
-            'imsak' => 0, 'subuh' => 0, 'syuruq' => 0, 'dzuhur' => 0, 'ashar' => 0, 'maghrib' => 0, 'isya' => 0
-        ], $correctionsDb->toArray());
+            'imsak' => 0, 'subuh' => 0, 'syuruq' => 0, 'dzuhur' => 0,
+            'ashar' => 0, 'maghrib' => 0, 'isya' => 0,
+        ], $correctionsDb);
 
-        $hijriCorrection = (int) ($profile?->hijri_correction ?? 0);
-        $hijriInfo = $hijriService->convertToHijri(null, $hijriCorrection, $profile?->timezone ?? 'Asia/Jakarta');
+        // Apply corrections ke todaySchedule
+        $todaySchedule = $scheduleData;
+        foreach ($corrections as $prayer => $minutes) {
+            if ($prayer !== 'date' && isset($todaySchedule[$prayer]) && $minutes != 0) {
+                $todaySchedule[$prayer] = $this->correctedTime($todaySchedule[$prayer], (int) $minutes);
+            }
+        }
+
+        // --- Hijri correction ---
+        $hijriCorrectionDays = (int) ($profile?->hijri_correction ?? 0);
+
+        // --- Iqamah settings ---
         $iqamahDefaults = ['subuh' => 10, 'dzuhur' => 7, 'ashar' => 7, 'maghrib' => 5, 'isya' => 7];
-        $iqamahRows     = IqamahSetting::all()->keyBy('prayer_name');
-        $iqamah = [];
-        foreach ($iqamahDefaults as $prayer => $defaultMin) {
+        $iqamahRows = IqamahSetting::all()->keyBy('prayer_name');
+        $iqamahSettings = [];
+        foreach ($iqamahDefaults as $prayer => $default) {
             $row = $iqamahRows->get($prayer);
-            $iqamah[$prayer] = [
-                'prayer_name'      => $prayer,
-                'is_enabled'       => $row ? (bool) $row->is_enabled : true,
-                'duration_minutes' => $row ? (int) $row->duration_minutes : $defaultMin,
+            $iqamahSettings[$prayer] = [
+                'is_enabled' => $row ? (bool) $row->is_enabled : true,
+                'duration_minutes' => $row ? (int) $row->duration_minutes : $default,
             ];
         }
-        $media = MediaItem::where('is_active', true)->orderBy('sort_order')->get();
+
+        // --- Audio settings ---
+        $audioRows = AudioSetting::all()->keyBy('type');
+        $audioSettings = $this->buildAudioSettings($audioRows);
+
+        // --- Adzan settings (dari audio_settings + display) ---
+        $adzanRow = $audioRows->get('adzan');
+        $adzanSettings = [
+            'durationSeconds' => $adzanRow ? (int) $adzanRow->play_after_minutes : 180,
+            'displayMessage' => 'Mari Menunaikan Shalat Berjamaah di Masjid',
+        ];
+
+        // --- Syuruq settings ---
+        $syuruqRow = SyuruqSetting::first();
+        $syuruqSettings = [
+            'is_enabled' => $syuruqRow ? (bool) $syuruqRow->is_enabled : true,
+            'durationMinutes' => $syuruqRow ? (int) $syuruqRow->duration_minutes : 10,
+            'displayMessage' => 'Waktu terlarang shalat saat matahari terbit hingga masuk waktu Dhuha',
+        ];
+
+        // --- Countdown settings ---
+        $countdownSettings = CountdownSetting::allAsArray();
+        if (empty($countdownSettings)) {
+            $countdownSettings = ['subuh' => 5, 'dzuhur' => 5, 'ashar' => 5, 'maghrib' => 5, 'isya' => 5];
+        }
+
+        // --- Donation ---
+        $donation = DonationSetting::where('is_active', true)->first();
+
+        // --- Friday ---
+        $friday = FridaySetting::first();
+
+        // --- Theme ---
+        $theme = ThemeSetting::where('is_active', true)->first() ?? ThemeSetting::first();
+
+        // --- Media items (active, termasuk random hadis/doa) ---
+        $mediaItems = MediaItem::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'type' => $item->type,
+                    'content' => $item->content,
+                    'file_path' => $item->file_path,
+                    'url' => $item->file_path,
+                    'duration_seconds' => $item->duration_seconds,
+                    'sort_order' => $item->sort_order,
+                    'is_active' => (bool) $item->is_active,
+                    'starts_at' => $item->starts_at,
+                    'ends_at' => $item->ends_at,
+                ];
+            })
+            ->toArray();
+
+        // Random hadis/doa injection removed — media items only.
+
+        // --- Running texts (active) ---
         $now = now();
-        $runningText = RunningText::where('is_active', true)
+        $runningTexts = RunningText::where('is_active', true)
             ->where(function ($q) use ($now) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
             })
             ->where(function ($q) use ($now) {
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', $now);
             })
-            ->get();
-        $audioRows    = AudioSetting::all()->keyBy('type');
-        $adzanRow     = $audioRows->get('adzan');
-        $murottalRow  = $audioRows->get('murottal');
-        $dzikirPagi   = $audioRows->get('dzikir_pagi');
-        $dzikirPetang = $audioRows->get('dzikir_petang');
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'text' => $item->text,
+                    'speed' => match ($item->speed) {
+                        'slow' => 30, 'normal' => 50, 'fast' => 80, default => 50,
+                    },
+                    'category' => $item->category ?? 'umum',
+                    'is_active' => (bool) $item->is_active,
+                ];
+            })
+            ->toArray();
 
-        $enabledPrayersAdzan = $adzanRow
-            ? json_decode($adzanRow->source_url ?? '["subuh","dzuhur","ashar","maghrib","isya"]', true)
-            : ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
-
-        $enabledPrayersMurottal = $murottalRow
-            ? json_decode($murottalRow->source_url ?? '["subuh","dzuhur","ashar","maghrib","isya"]', true)
-            : ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
-
-        $audio = [
-            'adzan_audio_url'            => $adzanRow?->file_path ?? null,
-            'volume_adzan'               => $adzanRow?->volume ?? 80,
-            'adzan_duration_seconds'     => $adzanRow?->play_after_minutes ?? 150,
-            'enabled_prayers_for_adzan'   => $enabledPrayersAdzan,
-            'murottal_enabled'          => (bool) ($murottalRow?->is_enabled ?? true),
-            'murottal_before_minutes'   => $murottalRow?->play_before_minutes ?? 5,
-            'murottal_audio_url'        => $murottalRow?->file_path ?? null,
-            'volume_murottal'           => $murottalRow?->volume ?? 80,
-            'enabled_prayers_for_murottal' => $enabledPrayersMurottal,
-            'dzikir_pagi_enabled'        => (bool) ($dzikirPagi?->is_enabled ?? true),
-            'dzikir_pagi_after_minutes'   => $dzikirPagi?->play_after_minutes ?? 10,
-            'dzikir_pagi_audio_url'       => $dzikirPagi?->file_path ?? null,
-            'dzikir_petang_enabled'      => (bool) ($dzikirPetang?->is_enabled ?? true),
-            'dzikir_petang_after_minutes' => $dzikirPetang?->play_after_minutes ?? 10,
-            'dzikir_petang_audio_url'     => $dzikirPetang?->file_path ?? null,
-            'volume_dzikir'              => $dzikirPagi?->volume ?? 80,
-        ];
-        $donation = DonationSetting::where('is_active', true)->first();
-        $theme = ThemeSetting::where('is_active', true)->first() ?? ThemeSetting::first();
+        // --- Agendas (active, upcoming) ---
         $todayStr = date('Y-m-d');
-        $agendas = Agenda::where('is_active', true)->where('date', '>=', $todayStr)->orderBy('date')->take(5)->get();
+        $agendas = Agenda::where('is_active', true)
+            ->where('date', '>=', $todayStr)
+            ->orderBy('date')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'starts_at' => $item->date . 'T' . ($item->time ?? '18:30'),
+                    'duration_seconds' => (int) ($item->duration_seconds ?? 8),
+                    'is_active' => (bool) $item->is_active,
+                    'is_islamic_holiday' => (bool) ($item->is_islamic_holiday ?? false),
+                ];
+            })
+            ->toArray();
 
+        // --- Upcoming Islamic holiday ---
         $upcomingHoliday = Agenda::where('is_active', true)
             ->where('is_islamic_holiday', true)
             ->where('date', '>=', $todayStr)
-            ->orderBy('date', 'asc')
+            ->orderBy('date')
             ->first();
-
         $holidayData = null;
         if ($upcomingHoliday) {
             $diffDays = (int) (new \DateTime($todayStr))->diff(new \DateTime($upcomingHoliday->date))->format('%r%a');
             if ($diffDays >= 0 && $diffDays <= 30) {
                 $holidayData = [
-                    'id'          => $upcomingHoliday->id,
-                    'title'       => $upcomingHoliday->title,
-                    'date'        => $upcomingHoliday->date,
+                    'id' => $upcomingHoliday->id,
+                    'title' => $upcomingHoliday->title,
+                    'date' => $upcomingHoliday->date,
                     'description' => $upcomingHoliday->description,
-                    'days_left'   => $diffDays,
+                    'days_left' => $diffDays,
                 ];
             }
         }
 
-        $syuruqRow = \App\Models\SyuruqSetting::first();
-        $syuruq = [
-            'is_enabled'       => $syuruqRow ? (bool) $syuruqRow->is_enabled : true,
-            'duration_minutes' => $syuruqRow ? (int) $syuruqRow->duration_minutes : 10,
-        ];
-
-        $friday = \App\Models\FridaySetting::first();
-
+        // --- Build response ---
         return response()->json([
             'status' => 'success',
-            'timestamp' => now()->toIso8601String(),
-            'profile' => $profile,
-            'location' => $location,
-            'schedule' => $schedule,
-            'corrections' => $corrections,
-            'iqamah' => $iqamah,
-            'syuruq' => $syuruq,
-            'hijri' => $hijriInfo,
-            'media' => $media,
-            'running_text' => $runningText,
-            'audio' => $audio,
-            'donation' => $donation,
-            'theme' => $theme,
-            'agendas' => $agendas,
-            'upcoming_islamic_holiday' => $holidayData,
-            'friday' => $friday,
+            'data' => [
+                'mosqueProfile' => $profile ? [
+                    'name' => $profile->name,
+                    'address' => $profile->address,
+                    'logo_path' => $profile->logo_path
+                        && !str_starts_with((string) $profile->logo_path, 'http')
+                        ? asset('storage/'.ltrim(str_replace('/storage/', '', $profile->logo_path), '/'))
+                        : $profile->logo_path,
+                    'background_path' => $profile->background_path,
+                ] : null,
+                'prayerLocation' => $location ? [
+                    'city_name' => $location->city_name,
+                    'province_name' => $location->province_name,
+                    'city_code' => $location->city_code,
+                ] : null,
+                'todaySchedule' => $todaySchedule,
+                'rawSchedule' => $scheduleData,
+                'timeCorrections' => $corrections,
+                'hijriCorrectionDays' => $hijriCorrectionDays,
+                'iqamahSettings' => $iqamahSettings,
+                'adzanSettings' => $adzanSettings,
+                'audioSettings' => $audioSettings,
+                'syuruqSettings' => $syuruqSettings,
+                'countdownSettings' => $countdownSettings,
+                'donationSettings' => $donation ? [
+                    'title' => $donation->title,
+                    'description' => $donation->description,
+                    // Uploaded QRs are stored as bare disk paths (donasi/x.png);
+                    // expose the /storage URL so Flutter's _resolveStorageUrl
+                    // (which only prepends the server base) builds a working link.
+                    'qr_code_path' => $donation->qr_code_path
+                        && !str_starts_with((string) $donation->qr_code_path, 'http')
+                        ? asset('storage/'.$donation->qr_code_path)
+                        : $donation->qr_code_path,
+                    'account_name' => $donation->account_name,
+                    'duration_seconds' => (int) ($donation->duration_seconds ?? 10),
+                    'is_active' => (bool) $donation->is_active,
+                ] : null,
+                'fridaySettings' => $friday ? [
+                    'is_enabled' => (bool) $friday->is_enabled,
+                    'disable_iqamah_on_friday' => (bool) $friday->disable_iqamah_on_friday,
+                    'khutbah_duration_minutes' => (int) ($friday->khutbah_duration_minutes ?? 35),
+                    'khutbah_title' => $friday->khutbah_title,
+                    'khutbah_message' => $friday->khutbah_message,
+                    'khatib_name' => $friday->khutbah_khatib,
+                    'imam_name' => $friday->khutbah_imam,
+                    'theme_title' => $friday->khutbah_title,
+                ] : null,
+                'themeSettings' => $theme ? [
+                    'primary_color' => $theme->primary_color,
+                    'secondary_color' => $theme->secondary_color,
+                    'background_color' => $theme->background_color,
+                    'text_color' => $theme->text_color,
+                    'layout_config' => is_array($theme->layout_config) ? $theme->layout_config : ['mode' => 'default'],
+                ] : null,
+                'mediaItems' => $mediaItems,
+                'runningTexts' => $runningTexts,
+                'agendas' => $agendas,
+                'upcoming_islamic_holiday' => $holidayData,
+            ],
         ]);
+    }
+
+    private function timeOnly($value): string
+    {
+        if (!$value) return '00:00';
+        return substr((string) $value, 0, 5);
+    }
+
+    private function correctedTime(string $time, int $minutes): string
+    {
+        [$h, $m] = array_map('intval', explode(':', $time));
+        $total = ($h * 60 + $m + $minutes + 1440) % 1440;
+        return sprintf('%02d:%02d', intdiv($total, 60), $total % 60);
+    }
+
+    private function defaultSchedule(): array
+    {
+        return [
+            'date' => date('Y-m-d'),
+            'imsak' => '04:45', 'subuh' => '04:55', 'syuruq' => '06:12',
+            'dzuhur' => '12:20', 'ashar' => '15:42', 'maghrib' => '18:25', 'isya' => '19:36',
+        ];
+    }
+
+    private function buildAudioSettings($audioRows): array
+    {
+        $adzan = $audioRows->get('adzan');
+        $murottal = $audioRows->get('murottal');
+        $dzikirPagi = $audioRows->get('dzikir_pagi');
+        $dzikirPetang = $audioRows->get('dzikir_petang');
+
+        return [
+            'adzan' => [
+                'is_enabled' => true,
+                'volume' => $adzan ? (int) $adzan->volume : 80,
+                'custom_url' => $adzan?->file_path,
+            ],
+            'murottal' => [
+                'is_enabled' => $murottal ? (bool) $murottal->is_enabled : true,
+                'volume' => $murottal ? (int) $murottal->volume : 80,
+                'custom_url' => $murottal?->file_path,
+                'play_before_minutes' => $murottal ? (int) $murottal->play_before_minutes : 5,
+            ],
+            'dzikir_pagi' => [
+                'is_enabled' => $dzikirPagi ? (bool) $dzikirPagi->is_enabled : true,
+                'volume' => $dzikirPagi ? (int) $dzikirPagi->volume : 80,
+                'custom_url' => $dzikirPagi?->file_path,
+                'play_after_minutes' => $dzikirPagi ? (int) $dzikirPagi->play_after_minutes : 10,
+            ],
+            'dzikir_petang' => [
+                'is_enabled' => $dzikirPetang ? (bool) $dzikirPetang->is_enabled : true,
+                'volume' => $dzikirPetang ? (int) $dzikirPetang->volume : 80,
+                'custom_url' => $dzikirPetang?->file_path,
+                'play_after_minutes' => $dzikirPetang ? (int) $dzikirPetang->play_after_minutes : 10,
+            ],
+        ];
     }
 }

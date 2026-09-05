@@ -38,5 +38,24 @@ void main() {
       };
       expect(PrayerService.countdownMinutesFor(PrayerName.subuh, s), 6);
     });
+
+    test('backend flat map shape is read (DisplayController payload)', () {
+      // Production payload: {"subuh": 5, "dzuhur": 5, "maghrib": 12, ...}
+      const s = <String, dynamic>{
+        'subuh': 5,
+        'dzuhur': 5,
+        'ashar': 5,
+        'maghrib': 12,
+        'isya': 5,
+      };
+      expect(PrayerService.countdownMinutesFor(PrayerName.maghrib, s), 12);
+      expect(PrayerService.countdownMinutesFor(PrayerName.subuh, s), 5);
+      expect(PrayerService.countdownMinutesFor(PrayerName.isya, s), 5);
+    });
+
+    test('backend flat map with string minutes parsed', () {
+      const s = <String, dynamic>{'maghrib': '12'};
+      expect(PrayerService.countdownMinutesFor(PrayerName.maghrib, s), 12);
+    });
   });
 }

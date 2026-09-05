@@ -1,8 +1,27 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Sinkronisasi jadwal shalat otomatis dari API EQuran.id (Kemenag RI) tiap 2 jam.
+// Membutuhkan cron server: `php artisan schedule:run` setiap menit (lihat DEPLOY.md).
+Schedule::call(function () {
+    $location = App\Models\PrayerLocation::where('is_active', true)->first()
+        ?? App\Models\PrayerLocation::first();
+    $city = $location?->city_name ?? 'Kota Padang';
+
+    $success = app(App\Services\PrayerScheduleService::class)->syncSchedules(
+        $location?->province_name ?? 'Sumatera Barat',
+        $city
+    );
+
+    App\Models\SyncLog::create([
+        'type'    => 'schedule_sync',
+        'status'  => $success ? 'success' : 'failed',
+        'message' => ($success ? 'Sinkronisasi terjadwal (2 jam) berhasil untuk ' : 'Sinkronisasi terjadwal (2 jam) gagal untuk ').$city.'.',
+        'details' => [
+            'city'    => $city,
+            'trigger' => 'scheduler',
+            'time'    => now()->toIso8601String(),
+        ],
+    ]);
+})->everyTwoHours()->name('sinkron-jadwal-shalat')->withoutOverlapping();

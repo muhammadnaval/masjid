@@ -1,3 +1,12 @@
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Node.js artifacts
+node_modules/
+dist/
 
 # InsForge & AI agent skills
 .insforge

@@ -10,24 +10,6 @@ import 'package:masjid_display/services/api_service.dart';
 
 void main() {
   group('Sprint 9 production readiness', () {
-    test('parses random hadis API into media slide', () {
-      final slide = ApiService.parseRandomHadis({
-        'status': true,
-        'message': 'success',
-        'data': {
-          'text': {'ar': 'قال رسول الله ﷺ', 'id': 'Terjemah hadis'},
-          'grade': 'Sahih',
-          'takhrij': 'رواه مسلم',
-        },
-      });
-
-      expect(slide?.id, 'random_hadis');
-      expect(slide?.type, SlideType.hadith);
-      expect(slide?.arabicText, 'قال رسول الله ﷺ');
-      expect(slide?.subtitle, 'Grade: Sahih');
-      expect(slide?.description, 'Terjemah hadis\nTakhrij: رواه مسلم');
-    });
-
     test(
       'keeps cached prayer schedule when fresh API omits schedule',
       () async {
@@ -182,7 +164,7 @@ void main() {
       );
     });
 
-    testWidgets('TV display renders backend random doa Arabic text', (
+    testWidgets('TV display renders backend hadith-type media item', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1920, 1080);
