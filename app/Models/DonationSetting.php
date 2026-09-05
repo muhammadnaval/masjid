@@ -16,6 +16,7 @@ class DonationSetting extends Model
         'bank_name',
         'account_name',
         'account_number',
+        'duration_seconds',
         'is_active',
     ];
 

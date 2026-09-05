@@ -173,6 +173,7 @@ class DisplayController extends Controller
                     'title' => $item->title,
                     'description' => $item->description,
                     'starts_at' => $item->date . 'T' . ($item->time ?? '18:30'),
+                    'duration_seconds' => (int) ($item->duration_seconds ?? 8),
                     'is_active' => (bool) $item->is_active,
                     'is_islamic_holiday' => (bool) ($item->is_islamic_holiday ?? false),
                 ];
@@ -237,6 +238,7 @@ class DisplayController extends Controller
                         ? asset('storage/'.$donation->qr_code_path)
                         : $donation->qr_code_path,
                     'account_name' => $donation->account_name,
+                    'duration_seconds' => (int) ($donation->duration_seconds ?? 10),
                     'is_active' => (bool) $donation->is_active,
                 ] : null,
                 'fridaySettings' => $friday ? [

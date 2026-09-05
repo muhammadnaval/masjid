@@ -157,6 +157,7 @@
                 <div><label class="block text-xs text-slate-300 mb-1">Nama Rekening</label><input type="text" name="account_name" value="{{ $donation->account_name ?? '' }}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
                 <div><label class="block text-xs text-slate-300 mb-1">Nomor</label><input type="text" name="account_number" value="{{ $donation->account_number ?? '' }}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
             </div>
+            <div><label class="block text-xs font-semibold text-slate-300 mb-1">Durasi tampil (detik)</label><input type="number" name="duration_seconds" min="3" max="300" value="{{ $donation->duration_seconds ?? 10 }}" class="w-40 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white text-center"><p class="text-xs text-slate-500 mt-1">QR Donasi akan tampil selama durasi ini.</p></div>
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1">Gambar Kode QR (PNG/JPG, diupload dari aplikasi bank/QRIS)</label>
                 <input type="file" name="qr_image" accept="image/png,image/jpeg,image/webp" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-300 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-white file:text-xs">
@@ -259,6 +260,9 @@
             <div><label class="block text-xs text-slate-300 mb-1">Waktu</label><input type="time" name="time" value="18:30" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
         </div>
         <div><label class="block text-xs text-slate-300 mb-1">Deskripsi</label><textarea name="description" rows="2" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-xs text-slate-300 mb-1">Durasi tampil (detik)</label><input type="number" name="duration_seconds" min="3" max="300" value="8" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"><p class="text-xs text-slate-500 mt-1">Agenda akan tampil selama durasi ini.</p></div>
+        </div>
         <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" name="is_islamic_holiday" value="1"> Hari Besar Islam</label>
             <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition">Tambah</button>

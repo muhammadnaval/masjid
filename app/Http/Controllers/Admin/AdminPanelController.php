@@ -79,8 +79,9 @@ class AdminPanelController extends Controller
 
     public function storeAgenda(Request $request)
     {
-        $validated = $request->validate(['title' => 'required|string|max:255', 'date' => 'required|date', 'time' => 'nullable|string|max:50', 'location' => 'nullable|string|max:255', 'description' => 'nullable|string', 'is_islamic_holiday' => 'nullable|boolean']);
+        $validated = $request->validate(['title' => 'required|string|max:255', 'date' => 'required|date', 'time' => 'nullable|string|max:50', 'location' => 'nullable|string|max:255', 'description' => 'nullable|string', 'duration_seconds' => 'required|integer|min:3|max:300', 'is_islamic_holiday' => 'nullable|boolean']);
         $validated['time'] ??= '18:30';
+        $validated['duration_seconds'] ??= 8;
         $validated['is_islamic_holiday'] = $validated['is_islamic_holiday'] ?? false;
         $validated['is_active'] = true;
         Agenda::create($validated);
@@ -136,7 +137,7 @@ class AdminPanelController extends Controller
         AudioSetting::updateOrCreate(['type'=>'dzikir_petang'],['prayer_name'=>'ashar','play_after_minutes'=>$v['dzikir_petang_after_minutes']??10,'volume'=>$v['volume_dzikir'],'is_enabled'=>true]);
     }
     private function saveDonation(Request $r): void {
-        $data = $r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','bank_name'=>'nullable|string','account_name'=>'nullable|string','account_number'=>'nullable|string','is_active'=>'required|boolean']);
+        $data = $r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','bank_name'=>'nullable|string','account_name'=>'nullable|string','account_number'=>'nullable|string','duration_seconds'=>'required|integer|min:3|max:300','is_active'=>'required|boolean']);
         if ($r->hasFile('qr_image')) {
             $r->validate(['qr_image'=>'image|mimes:png,jpg,jpeg,webp|max:4096']);
             // Delete previous uploaded QR (only files we manage on the public disk)

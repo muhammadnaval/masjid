@@ -15,6 +15,7 @@ class Agenda extends Model
         'time',
         'location',
         'description',
+        'duration_seconds',
         'is_islamic_holiday',
         'is_active',
     ];

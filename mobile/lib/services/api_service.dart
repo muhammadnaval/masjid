@@ -84,6 +84,8 @@ class ApiService {
           type: SlideType.announcement,
           subtitle: _indonesianDate(startsAt),
           translationText: raw['description']?.toString(),
+          durationSeconds:
+              int.tryParse(raw['duration_seconds']?.toString() ?? '') ?? 8,
         ),
       );
     }

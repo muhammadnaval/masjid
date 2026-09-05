@@ -420,7 +420,11 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
               donasiData['qr_code_path'] ?? donasiData['qr_code_url'],
             ),
             type: SlideType.donation,
-            durationSeconds: 10,
+            durationSeconds:
+                int.tryParse(
+                  donasiData['duration_seconds']?.toString() ?? '',
+                ) ??
+                10,
           );
         }
         _mediaSlides = withDonationSlide(_mediaSlides, donasiSlide);
