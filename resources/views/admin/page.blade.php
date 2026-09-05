@@ -131,7 +131,7 @@
 
 @elseif($page === 'donation')
 <div class="max-w-2xl">
-    <form method="POST" action="{{ route('admin.page.save', 'donation') }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.page.save', 'donation') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
             <h3 class="text-sm font-bold text-emerald-400">QR Donasi</h3>
@@ -145,6 +145,17 @@
                 <div><label class="block text-xs text-slate-300 mb-1">Bank</label><input type="text" name="bank_name" value="{{ $donation->bank_name ?? '' }}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
                 <div><label class="block text-xs text-slate-300 mb-1">Nama Rekening</label><input type="text" name="account_name" value="{{ $donation->account_name ?? '' }}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
                 <div><label class="block text-xs text-slate-300 mb-1">Nomor</label><input type="text" name="account_number" value="{{ $donation->account_number ?? '' }}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Gambar Kode QR (PNG/JPG, diupload dari aplikasi bank/QRIS)</label>
+                <input type="file" name="qr_image" accept="image/png,image/jpeg,image/webp" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-300 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-white file:text-xs">
+                <p class="text-xs text-slate-500 mt-1">Kosongkan jika tidak ingin mengganti gambar.</p>
+                @if(!empty($donation->qr_code_path))
+                    <div class="mt-3 flex items-center gap-3">
+                        <img src="{{ str_starts_with($donation->qr_code_path, 'http') ? $donation->qr_code_path : asset('storage/'.$donation->qr_code_path) }}" alt="QR Donasi saat ini" class="h-24 w-24 rounded-lg border border-slate-700 bg-white p-1 object-contain">
+                        <span class="text-xs text-slate-400">Gambar QR saat ini</span>
+                    </div>
+                @endif
             </div>
         </div>
         <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition">Simpan</button>

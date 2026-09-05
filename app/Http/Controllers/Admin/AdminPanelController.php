@@ -20,6 +20,7 @@ use App\Models\Agenda;
 use App\Models\MediaItem;
 use App\Models\SyncLog;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminPanelController extends Controller
 {
@@ -121,7 +122,19 @@ class AdminPanelController extends Controller
         AudioSetting::updateOrCreate(['type'=>'dzikir_pagi'],['prayer_name'=>'subuh','play_after_minutes'=>$v['dzikir_pagi_after_minutes']??10,'volume'=>$v['volume_dzikir'],'is_enabled'=>true]);
         AudioSetting::updateOrCreate(['type'=>'dzikir_petang'],['prayer_name'=>'ashar','play_after_minutes'=>$v['dzikir_petang_after_minutes']??10,'volume'=>$v['volume_dzikir'],'is_enabled'=>true]);
     }
-    private function saveDonation(Request $r): void { DonationSetting::updateOrCreate(['id'=>1],$r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','bank_name'=>'nullable|string','account_name'=>'nullable|string','account_number'=>'nullable|string','is_active'=>'required|boolean'])); }
+    private function saveDonation(Request $r): void {
+        $data = $r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','bank_name'=>'nullable|string','account_name'=>'nullable|string','account_number'=>'nullable|string','is_active'=>'required|boolean']);
+        if ($r->hasFile('qr_image')) {
+            $r->validate(['qr_image'=>'image|mimes:png,jpg,jpeg,webp|max:4096']);
+            // Delete previous uploaded QR (only files we manage on the public disk)
+            $previous = DonationSetting::find(1)?->qr_code_path;
+            if ($previous && !str_starts_with($previous, 'http')) {
+                Storage::disk('public')->delete($previous);
+            }
+            $data['qr_code_path'] = $r->file('qr_image')->store('donasi', 'public');
+        }
+        DonationSetting::updateOrCreate(['id'=>1],$data);
+    }
     private function saveFriday(Request $r): void { FridaySetting::updateOrCreate(['id'=>1],$r->validate(['is_enabled'=>'required|boolean','disable_iqamah_on_friday'=>'required|boolean','khutbah_title'=>'required|string|max:255','khutbah_khatib'=>'nullable|string|max:255','khutbah_imam'=>'nullable|string|max:255','khutbah_duration_minutes'=>'required|integer|min:5|max:120'])); }
     private function saveTheme(Request $r): void { ThemeSetting::where('is_active',true)->update($r->validate(['theme_name'=>'required|string|max:255','primary_color'=>'required|string','secondary_color'=>'required|string','background_color'=>'required|string','text_color'=>'required|string'])); }
     private function saveHijri(Request $r): void { MosqueProfile::updateOrCreate(['id'=>1],$r->validate(['hijri_correction'=>'required|integer|min:-5|max:5'])); }
