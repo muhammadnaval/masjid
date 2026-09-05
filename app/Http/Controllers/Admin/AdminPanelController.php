@@ -111,7 +111,20 @@ class AdminPanelController extends Controller
         return back()->with('success', 'Data berhasil dihapus.');
     }
 
-    private function saveProfile(Request $r): void { MosqueProfile::updateOrCreate(['id'=>1], $r->validate(['name'=>'required|string|max:255','address'=>'required|string','contact'=>'nullable|string|max:255','timezone'=>'required|string|max:50'])); }
+    private function saveProfile(Request $r): void {
+        $data = $r->validate(['name'=>'required|string|max:255','address'=>'required|string','contact'=>'nullable|string|max:255','timezone'=>'required|string|max:50']);
+        if ($r->hasFile('logo_image')) {
+            $r->validate(['logo_image'=>'image|mimes:png,jpg,jpeg,webp|max:4096']);
+            $profile = MosqueProfile::find(1);
+            $previous = $profile?->logo_path;
+            if ($previous && !str_starts_with($previous, 'http')) {
+                $previousPath = ltrim(str_replace('/storage/', '', $previous), '/');
+                Storage::disk('public')->delete($previousPath);
+            }
+            $data['logo_path'] = $r->file('logo_image')->store('profil', 'public');
+        }
+        MosqueProfile::updateOrCreate(['id'=>1], $data);
+    }
     private function saveSchedule(Request $r): void { $v=$r->validate(['corrections'=>'required|array','corrections.*'=>'integer|min:-60|max:60']); foreach($v['corrections'] as $p=>$m) PrayerTimeCorrection::updateOrCreate(['prayer_name'=>$p],['correction_minutes'=>$m]); }
     private function saveIqamah(Request $r): void { foreach(['subuh','dzuhur','ashar','maghrib','isya'] as $p) IqamahSetting::updateOrCreate(['prayer_name'=>$p],['is_enabled'=>$r->boolean("{$p}_enabled"),'duration_minutes'=>(int)$r->input("{$p}_minutes",7)]); }
     private function saveSyuruq(Request $r): void { SyuruqSetting::updateOrCreate(['id'=>1],$r->validate(['is_enabled'=>'required|boolean','duration_minutes'=>'required|integer|min:1|max:60'])); }

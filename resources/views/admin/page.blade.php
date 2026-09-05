@@ -26,7 +26,7 @@
 @section('content')
 @if($page === 'profile')
 <div class="max-w-4xl space-y-6">
-    <form method="POST" action="{{ route('admin.page.save', 'profile') }}" class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+    <form method="POST" action="{{ route('admin.page.save', 'profile') }}" enctype="multipart/form-data" class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
         @csrf
         <h3 class="text-sm font-bold text-emerald-400">Identitas Masjid</h3>
         <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Masjid</label><input type="text" name="name" value="{{ old('name', $profile->name ?? '') }}" required class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:border-emerald-500 transition"></div>
@@ -34,6 +34,17 @@
         <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Kontak</label><input type="text" name="contact" value="{{ old('contact', $profile->contact ?? '') }}" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"></div>
             <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Timezone</label><select name="timezone" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white"><option value="Asia/Jakarta" {{ ($profile->timezone ?? '') === 'Asia/Jakarta' ? 'selected' : '' }}>WIB</option><option value="Asia/Makassar" {{ ($profile->timezone ?? '') === 'Asia/Makassar' ? 'selected' : '' }}>WITA</option><option value="Asia/Jayapura" {{ ($profile->timezone ?? '') === 'Asia/Jayapura' ? 'selected' : '' }}>WIT</option></select></div>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Logo Masjid (PNG/JPG, maks. 4 MB)</label>
+            <input type="file" name="logo_image" accept="image/png,image/jpeg,image/webp" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+            <p class="text-xs text-slate-500 mt-1">Kosongkan jika tidak ingin mengganti logo.</p>
+            @if(!empty($profile->logo_path))
+                <div class="mt-3 flex items-center gap-3">
+                    <img src="{{ str_starts_with($profile->logo_path, 'http') ? $profile->logo_path : asset('storage/'.ltrim(str_replace('/storage/', '', $profile->logo_path), '/')) }}" alt="Logo masjid saat ini" class="h-24 w-24 rounded-full object-cover border border-slate-700 bg-slate-950">
+                    <span class="text-xs text-slate-400">Logo saat ini</span>
+                </div>
+            @endif
         </div>
         <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition">Simpan Perubahan</button>
     </form>

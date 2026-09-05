@@ -206,7 +206,10 @@ class DisplayController extends Controller
                 'mosqueProfile' => $profile ? [
                     'name' => $profile->name,
                     'address' => $profile->address,
-                    'logo_path' => $profile->logo_path,
+                    'logo_path' => $profile->logo_path
+                        && !str_starts_with((string) $profile->logo_path, 'http')
+                        ? asset('storage/'.ltrim(str_replace('/storage/', '', $profile->logo_path), '/'))
+                        : $profile->logo_path,
                     'background_path' => $profile->background_path,
                 ] : null,
                 'prayerLocation' => $location ? [
