@@ -5,7 +5,6 @@ import '../models/media_slide.dart';
 
 class ApiService {
   static const _displayStateCacheKey = 'display_state_cache_v1';
-  static const _randomHadisUrl = 'https://api.myquran.com/v3/hadis/enc/random';
 
   static const baseUrl = String.fromEnvironment(
     'INSFORGE_URL',
@@ -161,44 +160,6 @@ class ApiService {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  static MediaSlideItem? parseRandomHadis(Map json) {
-    final data = json['data'];
-    final text = data is Map ? data['text'] : null;
-    if (data is! Map || text is! Map) return null;
-
-    final ar = text['ar']?.toString().trim();
-    final id = text['id']?.toString().trim();
-    final grade = data['grade']?.toString().trim();
-    final takhrij = data['takhrij']?.toString().trim();
-    if (ar == null || ar.isEmpty || id == null || id.isEmpty) return null;
-
-    return MediaSlideItem(
-      id: 'random_hadis',
-      title: 'HADIS PILIHAN',
-      type: SlideType.hadith,
-      arabicText: ar,
-      subtitle: grade == null || grade.isEmpty ? null : 'Grade: $grade',
-      description: [
-        id,
-        if (takhrij != null && takhrij.isNotEmpty) 'Takhrij: $takhrij',
-      ].join('\n'),
-      durationSeconds: 10,
-    );
-  }
-
-  static Future<MediaSlideItem?> fetchRandomHadis({http.Client? client}) async {
-    try {
-      final response =
-          await (client?.get(Uri.parse(_randomHadisUrl)) ??
-                  http.get(Uri.parse(_randomHadisUrl)))
-              .timeout(const Duration(seconds: 4));
-      if (response.statusCode != 200) return null;
-      final json = jsonDecode(response.body);
-      return json is Map ? parseRandomHadis(json) : null;
-    } catch (_) {
-      return null;
-    }
-  }
   static Future<Map<String, dynamic>?> fetchDisplayState({
     http.Client? client,
     Map<String, dynamic>? cachedState,

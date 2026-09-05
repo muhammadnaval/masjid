@@ -56,7 +56,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   late DateTime _currentTime;
   Timer? _clockTimer;
   Timer? _apiPollTimer;
-  Timer? _randomHadisTimer;
 
   String _mosqueName = "MASJID AL-HIDAYAH SITEBA";
   String _mosqueAddress =
@@ -81,7 +80,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   PrayerScheduleItem? _nextPrayer;
   Duration _nextPrayerCountdown = Duration.zero;
   List<MediaSlideItem>? _mediaSlides;
-  MediaSlideItem? _randomHadisSlide;
 
   Map<String, dynamic>? _audioSettings;
   Map<String, dynamic>? _adzanSettings;
@@ -107,11 +105,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
     );
     _updateScheduleAndNextPrayer();
     _startClockTimer();
-    _fetchRandomHadis();
-    _randomHadisTimer = Timer.periodic(
-      const Duration(minutes: 30),
-      (_) => _fetchRandomHadis(),
-    );
     if (widget.displayState case final state?) {
       _applyApiState(state);
     } else {
@@ -144,22 +137,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   Future<void> _fetchApiState() async {
     final apiData = await ApiService.fetchDisplayState();
     if (apiData != null) _applyApiState(apiData);
-  }
-
-  Future<void> _fetchRandomHadis() async {
-    final slide = await ApiService.fetchRandomHadis();
-    if (!mounted || slide == null) return;
-    setState(() {
-      _randomHadisSlide = slide;
-      _syncRandomHadisSlide();
-    });
-  }
-
-  void _syncRandomHadisSlide() {
-    final slide = _randomHadisSlide;
-    _mediaSlides ??= [];
-    _mediaSlides!.removeWhere((item) => item.id == 'random_hadis');
-    if (slide != null) _mediaSlides!.insert(0, slide);
   }
 
   void _applyApiState(Map<String, dynamic> apiData) {
@@ -478,7 +455,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
           _mediaSlides!.removeWhere((item) => item.id == slide.id);
           _mediaSlides!.add(slide);
         }
-        _syncRandomHadisSlide();
 
         final rtList = apiData['runningTexts'] as List?;
         if (rtList != null) {
@@ -770,7 +746,6 @@ class _TVDisplayScreenState extends State<TVDisplayScreen> {
   void dispose() {
     _clockTimer?.cancel();
     _apiPollTimer?.cancel();
-    _randomHadisTimer?.cancel();
     _adzanTimer?.cancel();
     _fridayTimer?.cancel();
     super.dispose();

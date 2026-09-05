@@ -18,13 +18,11 @@ use App\Models\FridaySetting;
 use App\Models\SyuruqSetting;
 use App\Models\CountdownSetting;
 use App\Services\HijriDateService;
-use App\Services\RandomContentService;
 
 class DisplayController extends Controller
 {
     public function state(
         HijriDateService $hijriService,
-        RandomContentService $randomContent,
     ): JsonResponse {
         // --- Profile ---
         $profile = MosqueProfile::first();
@@ -138,13 +136,7 @@ class DisplayController extends Controller
             })
             ->toArray();
 
-        // Inject random hadis & doa
-        $randomHadis = $randomContent->getRandomHadis();
-        $randomDoa = $randomContent->getRandomDoa();
-        $mediaItems = array_merge(
-            array_filter([$randomDoa, $randomHadis]),
-            $mediaItems
-        );
+        // Random hadis/doa injection removed — media items only.
 
         // --- Running texts (active) ---
         $now = now();
