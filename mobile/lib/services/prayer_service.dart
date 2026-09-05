@@ -203,7 +203,8 @@ class PrayerService {
   }
 
   /// Resolves the pre-adzan countdown duration (minutes) for [name].
-  /// Per-prayer override wins, else settings.defaultMinutes, else 5.
+  /// Backend sends a flat map {subuh: 5, ...} (DisplayController);
+  /// legacy {perPrayer: {...}, defaultMinutes: N} shapes still supported.
   static int countdownMinutesFor(
     PrayerName name,
     Map<String, dynamic>? settings,
@@ -212,6 +213,12 @@ class PrayerService {
     if (per is Map) {
       final v = per[name.name];
       final n = v is num ? v.toInt() : int.tryParse(v?.toString() ?? '');
+      if (n != null) return n;
+    }
+    // Flat per-prayer key from backend, e.g. countdownSettings['maghrib'] = 12
+    final flat = settings?[name.name];
+    if (flat != null) {
+      final n = flat is num ? flat.toInt() : int.tryParse(flat.toString());
       if (n != null) return n;
     }
     return (settings?['defaultMinutes'] as num?)?.toInt() ?? 5;
