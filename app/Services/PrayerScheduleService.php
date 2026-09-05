@@ -116,6 +116,7 @@ class PrayerScheduleService
             ]
         );
 
-        return true;
+        // API unreachable/invalid: report failure so sync logs tell the truth
+        return false;
     }
 }
